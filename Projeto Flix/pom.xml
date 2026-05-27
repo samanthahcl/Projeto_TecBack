@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.10</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>br.uniesp.si</groupId>
 	<artifactId>techback</artifactId>
@@ -14,23 +14,17 @@
 	<name>techback</name>
 	<description>Backend 1 Uniesp</description>
 	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
+	<licenses><license/></licenses>
+	<developers><developer/></developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection/><developerConnection/><tag/><url/>
 	</scm>
+
 	<properties>
 		<java.version>21</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<!-- Defina a versão do Lombok usada pelo processador de anotações -->
-		<lombok.version>1.18.32</lombok.version>
+		<!-- CORRIGIDO: 1.18.36 resolve o TypeTag::UNKNOWN com Java 21 -->
+		<lombok.version>1.18.36</lombok.version>
 	</properties>
 
 	<dependencyManagement>
@@ -77,6 +71,7 @@
 			<version>3.2.0</version>
 		</dependency>
 
+		<!-- Spring Security - BCrypt + filtro de rotas -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -94,11 +89,17 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- SpringDoc OpenAPI -->
+		<!-- SpringDoc OpenAPI (Swagger) -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.8.6</version>
+		</dependency>
+
+		<!-- Flyway - migrations do banco -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
 		</dependency>
 
 		<dependency>
@@ -114,7 +115,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Testcontainers para testes de integração -->
+		<!-- Testcontainers -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
@@ -132,9 +133,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
+				<!-- CORRIGIDO: 3.13.0 tem melhor suporte ao Java 21 + Lombok -->
+				<version>3.13.0</version>
 				<configuration>
-					<!-- Use o release para compilar contra Java 21 de forma consistente -->
 					<release>${java.version}</release>
 					<annotationProcessorPaths>
 						<path>
@@ -145,28 +146,24 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-			
-			<!-- Plugin JaCoCo para cobertura de testes -->
+
+			<!-- JaCoCo - cobertura de testes -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
 				<executions>
 					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
+						<goals><goal>prepare-agent</goal></goals>
 					</execution>
 					<execution>
 						<id>report</id>
 						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
+						<goals><goal>report</goal></goals>
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
