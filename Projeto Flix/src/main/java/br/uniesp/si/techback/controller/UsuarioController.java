@@ -6,24 +6,41 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
-@RestController @RequestMapping("/usuarios") @RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/v1/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
+
     private final UsuarioService usuarioService;
 
-    @PostMapping @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioDTO incluir(@RequestBody @Valid UsuarioDTO dto) { return usuarioService.incluir(dto); }
+    // RF1 - cadastrar usuário
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UsuarioDTO criar(@Valid @RequestBody UsuarioDTO dto) {
+        return usuarioService.criar(dto);
+    }
 
     @GetMapping
-    public List<UsuarioDTO> listar() { return usuarioService.listar(); }
+    public List<UsuarioDTO> listar() {
+        return usuarioService.listar();
+    }
 
     @GetMapping("/{id}")
-    public UsuarioDTO buscarPorId(@PathVariable Long id) { return usuarioService.buscarPorId(id); }
+    public UsuarioDTO buscarPorId(@PathVariable Long id) {
+        return usuarioService.buscarPorId(id);
+    }
 
     @PutMapping("/{id}")
-    public UsuarioDTO atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioDTO dto) { return usuarioService.atualizar(id, dto); }
+    public UsuarioDTO atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO dto) {
+        return usuarioService.atualizar(id, dto);
+    }
 
-    @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletar(@PathVariable Long id) { usuarioService.deletar(id); }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletar(@PathVariable Long id) {
+        usuarioService.deletar(id);
+    }
 }

@@ -1,38 +1,89 @@
 package br.uniesp.si.techback.service;
 
 import br.uniesp.si.techback.dto.UsuarioDTO;
-import br.uniesp.si.techback.mapper.UsuarioMapper;
 import br.uniesp.si.techback.model.Usuario;
 import br.uniesp.si.techback.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
-@Service @RequiredArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class UsuarioService {
-    private final UsuarioRepository usuarioRepository;
-    private final UsuarioMapper usuarioMapper;
 
-    public UsuarioDTO incluir(UsuarioDTO dto) {
-        return usuarioMapper.toDTO(usuarioRepository.save(usuarioMapper.toEntity(dto)));
+    private final UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public UsuarioDTO criar(UsuarioDTO dto) {
+        // verifica se o e-mail já existe
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setNomeCompleto(dto.getNomeCompleto());
+        usuario.setDataNascimento(dto.getDataNascimento());
+        usuario.setEmail(dto.getEmail());
+        usuario.setCpfCnpj(dto.getCpfCnpj());
+        usuario.setPerfil(dto.getPerfil() == null ? "USER" : dto.getPerfil().toUpperCase());
+
+        // RF3 - guardar senha como hash BCrypt
+        usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
+
+        Usuario salvo = usuarioRepository.save(usuario);
+        return toDTO(salvo);
     }
+
     public List<UsuarioDTO> listar() {
-        return usuarioRepository.findAll().stream().map(usuarioMapper::toDTO).toList();
+        return usuarioRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
+
     public UsuarioDTO buscarPorId(Long id) {
-        return usuarioMapper.toDTO(usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado: " + id)));
-    }
-    public UsuarioDTO atualizar(Long id, UsuarioDTO dto) {
-        Usuario u = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado: " + id));
-        u.setNome(dto.getNome()); u.setEmail(dto.getEmail()); u.setSenha(dto.getSenha());
-        return usuarioMapper.toDTO(usuarioRepository.save(u));
+        return toDTO(usuario);
     }
+
+    public UsuarioDTO atualizar(Long id, UsuarioDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado: " + id));
+
+        usuario.setNomeCompleto(dto.getNomeCompleto());
+        usuario.setDataNascimento(dto.getDataNascimento());
+        usuario.setEmail(dto.getEmail());
+        usuario.setCpfCnpj(dto.getCpfCnpj());
+
+        // só atualiza a senha se ela foi informada
+        if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
+            usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
+        }
+
+        return toDTO(usuarioRepository.save(usuario));
+    }
+
     public void deletar(Long id) {
-        usuarioRepository.delete(usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado: " + id)));
+        if (!usuarioRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado: " + id);
+        }
+        usuarioRepository.deleteById(id);
+    }
+
+    // nunca retorna a senha no DTO
+    private UsuarioDTO toDTO(Usuario u) {
+        return UsuarioDTO.builder()
+                .id(u.getId())
+                .nomeCompleto(u.getNomeCompleto())
+                .dataNascimento(u.getDataNascimento())
+                .email(u.getEmail())
+                .cpfCnpj(u.getCpfCnpj())
+                .perfil(u.getPerfil())
+                .build();
     }
 }
