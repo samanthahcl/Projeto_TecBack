@@ -92,6 +92,15 @@ class MetodoPagamentoController {
         return metodoPagamentoService.cadastrar(dto);
     }
 
+    // RF7 - alterar dados do cartão
+    @PutMapping("/{id}")
+    public MetodoPagamentoDTO atualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody MetodoPagamentoDTO dto
+    ) {
+        return metodoPagamentoService.atualizar(id, dto);
+    }
+
     @GetMapping("/usuario/{usuarioId}")
     public List<MetodoPagamentoDTO> listarPorUsuario(@PathVariable Long usuarioId) {
         return metodoPagamentoService.listarPorUsuario(usuarioId);

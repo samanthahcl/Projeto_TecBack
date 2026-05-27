@@ -36,6 +36,25 @@ public class MetodoPagamentoService {
                 .toList();
     }
 
+    // RF7 - alterar dados do cartão após autenticação
+    public MetodoPagamentoDTO atualizar(Long id, MetodoPagamentoDTO dto) {
+        MetodoPagamento mp = metodoPagamentoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Método de pagamento não encontrado: " + id
+                ));
+
+        mp.setUsuarioId(dto.getUsuarioId());
+        mp.setBandeira(dto.getBandeira());
+        mp.setUltimos4(dto.getUltimos4());
+        mp.setMesExp(dto.getMesExp());
+        mp.setAnoExp(dto.getAnoExp());
+        mp.setNomePortador(dto.getNomePortador());
+        mp.setTokenGateway(dto.getTokenGateway());
+
+        return toDTO(metodoPagamentoRepository.save(mp));
+    }
+
     public void remover(Long id) {
         if (!metodoPagamentoRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Método de pagamento não encontrado: " + id);
