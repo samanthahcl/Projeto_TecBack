@@ -1,0 +1,837 @@
+# IESPFLIX_Guia_Estudo_Completo.pdf
+# paginas: 21
+
+
+--- PAGINA 1 ---
+■ IESPFLIX — Projeto BackEnd
+ Guia Completo de Estudo para a Apresentação
+ Disciplina: BackEnd — Tecnologias Web | Prof. Rodrigo Fujioka
+Este guia foi criado especialmente para você entender TUDO que foi desenvolvido no projeto e saber
+explicar com segurança na apresentação.
+Leia com calma cada seção. Cada parte do código está explicada do zero, como se você nunca tivesse
+visto Spring Boot antes.
+Ao final de cada seção você encontrará um resumo do que o professor exige e como você atende a esse
+requisito.
+■ O QUE VOCÊ VAI ENCONTRAR NESTE GUIA
+#
+Seção
+O que você aprende
+1
+O que é o projeto IESPFLIX?
+Objetivo geral e tecnologias usadas
+2
+Arquitetura em Camadas
+Controller, Service, Repository, Model, DTO, Mapper
+3
+O pom.xml explicado
+Dependências e para que serve cada uma
+4
+Entidades (Models) — Banco de Dados
+Como as tabelas viram código Java
+5
+DTOs — Transferência de Dados
+Por que não usamos a entidade diretamente na API
+6
+Mappers — Conversores
+Como transformar entidade em DTO e vice-versa
+7
+Repositories — Acesso ao Banco
+JpaRepository e queries JPQL
+8
+Services — Regras de Negócio
+Lógica, validações e integração
+9
+Controllers — API REST
+Endpoints, verbos HTTP e status codes
+10
+Bean Validation & Custom Validators
+Como funciona @NotBlank, @Email e o @Genero
+11
+Tratamento Global de Erros
+GlobalExceptionHandler e RFC 7807
+12
+Integração com ViaCEP (Feign)
+Como consumir API externa
+13
+Testes (JUnit + Mockito)
+O que são e como funcionam
+14
+Configurações (Properties)
+H2, Swagger, perfis dev/test
+15
+Requisitos do Professor — Checklist
+Onde cada exigência está no código
+
+
+--- PAGINA 2 ---
+16
+Como Explicar na Apresentação
+Frases e roteiro sugerido
+
+
+--- PAGINA 3 ---
+1. O QUE É O PROJETO IESPFLIX?
+Objetivo Geral
+O IESPFLIX é uma API REST (uma interface de comunicação entre sistemas via internet) que simula o
+backend de um serviço de streaming, parecido com Netflix. Você está construindo o lado servidor da
+aplicação — a parte que recebe pedidos, processa, consulta o banco de dados e devolve respostas.
+O que é uma API REST?
+REST significa Representational State Transfer. É um padrão de como sistemas conversam pela internet.
+Quando você acessa um app e ele mostra filmes, por baixo ele está chamando uma API REST que busca
+esses dados no banco de dados. Essa API é o que você construiu!
+Stack de Tecnologias do Projeto
+Tecnologia
+O que é?
+Onde aparece no projeto
+Java 21
+Linguagem de programação principal
+Todo o código .java
+Spring Boot 3.5
+Framework que facilita criar APIs Java
+TechbackApplication.java, anotações @SpringBootApplication
+Spring Web
+Módulo para criar endpoints REST
+Controllers com @RestController
+Spring Data JPA
+Módulo para acessar banco de dados
+Repositories com JpaRepository
+H2 Database
+Banco de dados em memória (para desenvolvimento)
+application-dev.properties
+Hibernate
+ORM que converte objetos Java em tabelas SQL
+Anotações @Entity, @Table, @Column
+Lombok
+Elimina código repetitivo (getters, setters, etc.)
+@Data, @Builder, @NoArgsConstructor nas entidades
+Bean Validation
+Valida dados de entrada da API
+@NotBlank, @Email, @Valid nos DTOs
+SpringDoc OpenAPI
+Gera documentação automática (Swagger UI)
+Acessível em /swagger-ui.html
+OpenFeign
+Cliente HTTP para consumir APIs externas
+ViaCepClient.java
+Maven
+Gerenciador de dependências e build
+pom.xml
+JUnit 5 + Mockito
+Frameworks de testes automatizados
+Pasta src/test/java/...
+JaCoCo
+Mede cobertura de testes
+Plugin no pom.xml
+
+
+--- PAGINA 4 ---
+2. ARQUITETURA EM CAMADAS — A ESPINHA DORSAL DO
+PROJETO
+O projeto segue uma arquitetura dividida em camadas, onde cada camada tem uma responsabilidade
+específica. Isso é chamado de Separação de Responsabilidades e é uma das boas práticas mais
+cobradas.
+Visualizando o Fluxo de uma Requisição
+Quando alguém chama sua API (ex: GET /filmes), o pedido percorre o seguinte caminho:
+Ordem
+Camada
+Arquivo exemplo
+O que faz
+1º
+Controller
+(Controlador)
+FilmeController.java
+Recebe a requisição HTTP, valida dados de entrada, chama o Service
+2º
+Service
+(Serviço)
+FilmeService.java
+Contém a lógica de negócio, processa, chama o Repository
+3º
+Repository
+(Repositório)
+FilmeRepository.java
+Acessa o banco de dados, executa queries
+4º
+Model
+(Entidade)
+Filme.java
+Representa a tabela do banco de dados como objeto Java
+volta
+DTO
+FilmeDTO.java
+Formata o dado para enviar de volta ao cliente
+volta
+Mapper
+FilmeMapper.java
+Converte entre Model e DTO
+■ Analogia do Restaurante: O Controller é o garçom (recebe o pedido), o Service é o cozinheiro
+(prepara), o Repository é o estoque/geladeira (onde ficam os ingredientes = dados), e o banco de
+dados é o armazém (H2).
+
+
+--- PAGINA 5 ---
+3. O ARQUIVO pom.xml — O CORAÇÃO DO PROJETO MAVEN
+O pom.xml é como um 'carrinho de compras' do projeto. Ele lista todas as dependências (bibliotecas
+externas) que o projeto precisa. O Maven baixa essas dependências automaticamente da internet.
+Dependências Principais e o que Fazem
+spring-boot-starter-web
+→ Habilita a criação de APIs REST. Sem isso, não há @RestController funcionando.
+spring-boot-starter-data-jpa
+→ Habilita o acesso ao banco de dados com JPA/Hibernate.
+h2
+→ Banco de dados em memória. Perfeito para desenvolvimento: não precisa instalar nada.
+spring-boot-starter-validation
+→ Habilita Bean Validation: @NotBlank, @Email, @Valid, etc.
+modelmapper
+→ Biblioteca para copiar dados entre objetos (Entity → DTO e vice-versa).
+spring-cloud-starter-openfeign
+→ Permite criar clientes HTTP declarativos para consumir APIs externas (como ViaCEP).
+springdoc-openapi-starter-webmvc-ui
+→ Gera automaticamente a documentação Swagger UI em /swagger-ui.html.
+lombok
+→ Elimina código repetitivo: gera getters, setters, construtores automaticamente.
+spring-boot-starter-test
+→ Inclui JUnit 5, Mockito e Spring Test para escrever testes.
+jacoco-maven-plugin
+→ Plugin que mede cobertura de testes e gera relatório HTML.
+Versões Usadas
+ Java 21 (última versão LTS)  Spring Boot 3.5.10  Lombok 1.18.32  SpringDoc OpenAPI 2.8.6 
+Maven 3.9.9
+
+
+--- PAGINA 6 ---
+4. ENTIDADES (MODELS) — AS TABELAS DO BANCO DE DADOS
+EM JAVA
+As entidades são classes Java que representam tabelas do banco de dados. O Hibernate (que é o JPA
+por baixo) lê essas classes e cria as tabelas automaticamente. Cada atributo da classe vira uma coluna
+na tabela.
+Anotações Essenciais das Entidades
+Anotação
+O que significa?
+@Entity
+Diz ao Hibernate que esta classe é uma tabela do banco
+@Table(name = "filmes")
+Define o nome da tabela no banco (opcional, padrão é o nome da classe)
+@Id
+Define o campo como chave primária (PK) da tabela
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+O banco gera o ID automaticamente (auto-increment)
+@Column(nullable = false, length = 100)
+Configura a coluna: não pode ser nula, máximo 100 caracteres
+@Column(unique = true)
+O valor deste campo deve ser único na tabela (como email)
+@Column(columnDefinition = "TEXT")
+Campo de texto longo (sem limite fixo de caracteres)
+@Data (Lombok)
+Gera automaticamente: getters, setters, toString, equals, hashCode
+@Builder (Lombok)
+Permite criar objetos com padrão builder: Filme.builder().titulo(...).build()
+@NoArgsConstructor (Lombok)
+Gera construtor sem argumentos (exigido pelo JPA)
+@AllArgsConstructor (Lombok)
+Gera construtor com todos os argumentos
+Exemplo Completo: Filme.java
+Veja como cada parte do código se conecta com o banco:
+@Data // Lombok: gera getters/setters/toString automaticamente @Builder // Lombok: permite
+Filme.builder().titulo("X").build() @NoArgsConstructor // Lombok: construtor vazio
+(obrigatorio para JPA) @AllArgsConstructor // Lombok: construtor com todos os campos
+@Entity // JPA: esta classe e uma tabela do banco @Table(name = "filmes") // JPA: o nome da
+tabela e "filmes" public class Filme { @Id // Chave primaria @GeneratedValue(strategy =
+IDENTITY) // ID auto-incrementado private Long id; @Column(nullable = false, length = 100)
+// Coluna obrigatoria, max 100 chars private String titulo; @Column(columnDefinition =
+"TEXT") // Coluna de texto livre private String sinopse; @Column(name = "data_lancamento")
+// Coluna com nome customizado private LocalDate dataLancamento; @Column(length = 50)
+@Genero // Custom Validator! (explicado depois) private String genero; @Column(name =
+"duracao_minutos") private Integer duracaoMinutos; @Column(name =
+"classificacao_indicativa", length = 10) private String classificacaoIndicativa; }
+Outras Entidades do Projeto
+ Usuario.java → tabela usuarios: Representa usuários com nome, email, senha
+ Cliente.java → tabela clientes: Dados de clientes: nome, CPF, telefone, endereço
+ Produto.java → tabela produtos: Produtos com nome, preço, estoque
+
+
+--- PAGINA 7 ---
+ Categoria.java → tabela categorias: Categorias com nome e descrição
+ Pedido.java → tabela pedidos: Pedidos com data, status, valor e referência ao cliente
+ Funcionario.java → tabela funcionarios: Funcionários com nome, cargo e dados de endereço via
+CEP
+
+
+--- PAGINA 8 ---
+5. DTOs — POR QUE NÃO EXPOR A ENTIDADE DIRETAMENTE?
+DTO significa Data Transfer Object (Objeto de Transferência de Dados). São classes simples usadas
+para receber dados da requisição e enviar dados na resposta da API.
+Por que usar DTOs em vez da entidade diretamente?
+■ Segurança: Você controla quais campos são expostos. Ex.: nunca expor senha_hash na resposta.
+■ Validação: As anotações de validação (@NotBlank, @Email) ficam no DTO, não na entidade.
+■ Flexibilidade: O DTO pode ter campos diferentes da entidade (combinar dados de várias tabelas).
+■ Desacoplamento: Mudanças no banco de dados não afetam diretamente o contrato da API.
+Exemplo: FilmeDTO.java
+@Data // Lombok: getters/setters @Builder // Lombok: builder pattern @NoArgsConstructor //
+Lombok: construtor vazio @AllArgsConstructor// Lombok: construtor completo public class
+FilmeDTO { private Long id; @NotBlank(message = "O titulo e obrigatorio") // Validacao:
+campo nao pode ser vazio private String titulo; private String sinopse; private LocalDate
+dataLancamento; private String genero; private Integer duracaoMinutos; private String
+classificacaoIndicativa; }
+Todos os DTOs do Projeto
+DTO
+Campos
+Validações
+FilmeDTO
+id, titulo, sinopse, dataLancamento, genero, duracaoMinutos, classificacaoIndicativa
+@NotBlank no titulo
+UsuarioDTO
+id, nome, email, senha
+@NotBlank no nome, @NotBlank + @Email no email, @NotBlank na senha
+ClienteDTO
+id, nome, cpf, telefone, endereco
+@NotBlank no nome e cpf
+ProdutoDTO
+id, nome, descricao, preco, estoque
+@NotBlank no nome, @NotNull + @DecimalMin no preco, @Min no estoque
+PedidoDTO
+id, dataPedido, status, valorTotal, clienteId
+@NotNull no dataPedido, @NotBlank no status, @DecimalMin no valorTotal
+CategoriaDTO
+id, nome, descricao
+@NotBlank no nome
+FuncionarioDTO
+id, nome, cargo
+@NotBlank no nome e cargo
+ViaCepResponseDTO
+cep, logradouro, bairro, localidade, uf, erro
+Nenhuma (só recebe dados da API externa)
+
+
+--- PAGINA 9 ---
+6. MAPPERS — CONVERTENDO ENTRE ENTIDADE E DTO
+O Mapper é uma classe responsável por converter dados entre a Entidade (que vem do banco) e o DTO
+(que vai para a API e volta dela). É como um tradutor.
+Como funciona o FilmeMapper?
+@Component // Spring gerencia esta classe (pode ser injetada em outras) public class
+FilmeMapper { private final ModelMapper modelMapper; // Biblioteca que copia campos
+automaticamente // Converte DTO -> Entidade (usado ao receber dados da API para salvar no
+banco) public Filme toEntity(FilmeDTO dto) { if (dto == null) return null; return
+modelMapper.map(dto, Filme.class); } // Converte Entidade -> DTO (usado ao buscar do banco
+para enviar para o cliente) public FilmeDTO toDTO(Filme entity) { if (entity == null)
+return null; return modelMapper.map(entity, FilmeDTO.class); } }
+Mappers Manuais vs. ModelMapper
+O projeto usa dois estilos de mapper:
+ FilmeMapper: usa ModelMapper (copia campos automaticamente pelo nome).
+ ClienteMapper, PedidoMapper, etc.: mapeamento manual com builder do Lombok — você
+especifica campo a campo:
+// Mapper manual (ClienteMapper) public Cliente toEntity(ClienteDTO dto) { return
+Cliente.builder() .id(dto.getId()) .nome(dto.getNome()) .cpf(dto.getCpf())
+.telefone(dto.getTelefone()) .endereco(dto.getEndereco()) .build(); }
+
+
+--- PAGINA 10 ---
+7. REPOSITORIES — ACESSO AO BANCO DE DADOS
+O Repository é a camada que conversa com o banco de dados. Ao extender JpaRepository, você
+ganha dezenas de métodos prontos GRATUITAMENTE, sem precisar escrever SQL.
+Métodos Gratuitos do JpaRepository
+Método Pronto
+O que faz
+findAll()
+SELECT * FROM filmes
+findById(id)
+SELECT * FROM filmes WHERE id = ?
+save(entity)
+INSERT ou UPDATE (se já tem id)
+deleteById(id)
+DELETE FROM filmes WHERE id = ?
+existsById(id)
+Retorna true se existe um registro com esse id
+count()
+SELECT COUNT(*) FROM filmes
+O FilmeRepository — Com JPQL (Requisito do Professor!)
+JPQL (Java Persistence Query Language) é uma linguagem de consulta parecida com SQL, mas que
+opera sobre objetos Java em vez de tabelas. O professor exige 4 consultas JPQL. Veja as que foram
+implementadas:
+@Repository public interface FilmeRepository extends JpaRepository { // JPQL 1: Lista
+filmes ordenados por titulo (A-Z) // "f" e o alias para Filme, "f.titulo" e o campo Java
+(nao coluna do banco) @Query("select f from Filme f order by f.titulo asc") List
+listarFilmesOrdenados(); // Query Method (Spring Data): Spring gera o SQL automaticamente
+pelo nome do metodo! // Equivale a: SELECT * FROM filmes ORDER BY titulo ASC List
+findAllByOrderByTituloAsc(); // Derived Query: busca por genero E titulo ao mesmo tempo
+Optional findByGeneroAndTitulo(String genero, String titulo); // JPQL com parametros
+nomeados (@Param) // :genero e :titulo sao substituidos pelos valores passados no metodo
+@Query("select f from Filme f where f.genero = :genero and f.titulo = :titulo") Filme
+buscarPorGenero(@Param("genero") String gen, @Param("titulo") String tit); }
+■ Importante: Em JPQL você escreve o nome da classe Java (Filme) e seus atributos Java (titulo,
+genero), NÃO os nomes das colunas do banco (filmes, titulo). O Hibernate faz a tradução.
+
+
+--- PAGINA 11 ---
+8. SERVICES — A LÓGICA DE NEGÓCIO DA APLICAÇÃO
+O Service contém as regras de negócio da aplicação. É aqui que fica toda a lógica: validar dados, tratar
+erros, chamar o repository, etc. O Controller apenas repassa o pedido para o Service.
+Estrutura do FilmeService
+@Service // Marca como componente de servico do Spring @Slf4j // Lombok: cria logger
+automaticamente (log.info(), log.error(), etc.) @RequiredArgsConstructor // Lombok: gera
+construtor com todos os campos final (injecao de dependencia) public class FilmeService {
+private final FilmeRepository filmeRepository; // Injeta o repository private final
+FilmeMapper filmeMapper; // Injeta o mapper // Metodo listar: busca todos os filmes e
+converte para DTO public List listar() { log.info("Buscando todos os filmes cadastrados");
+// Log de inicio da operacao List filmes = filmeRepository.findAll(); // Busca no banco
+return filmes.stream() .map(filmeMapper::toDTO) // Converte cada Filme para FilmeDTO
+.collect(Collectors.toList()); } // Metodo buscarPorId: busca um filme ou lanca excecao se
+nao existir public FilmeDTO buscarPorId(Long id) { log.info("Buscando filme pelo ID: {}",
+id); Filme filme = filmeRepository.findById(id) .orElseThrow(() -> { // Se nao encontrar,
+lanca RuntimeException com mensagem return new RuntimeException("Filme nao encontrado com
+o ID: " + id); }); return filmeMapper.toDTO(filme); } // Metodo salvar: recebe DTO,
+converte para entidade, salva no banco @Transactional // Garante que toda a operacao e
+atomica (tudo ou nada) public FilmeDTO salvar(FilmeDTO filmeDTO) { log.info("Salvando novo
+filme: {}", filmeDTO.getTitulo()); Filme filme = filmeMapper.toEntity(filmeDTO); // DTO ->
+Entidade Filme filmeSalvo = filmeRepository.save(filme);// Salva no banco return
+filmeMapper.toDTO(filmeSalvo); // Entidade -> DTO para retornar } }
+Por que @Transactional?
+A anotação @Transactional garante que se algo der errado durante a operação, o banco de dados é
+revertido ao estado anterior (rollback). É como uma 'transação bancária': ou tudo acontece, ou nada
+acontece.
+O FuncionarioService — Integração com ViaCEP
+@Service @RequiredArgsConstructor public class FuncionarioService { private final
+FuncionarioRepository funcionarioRepository; private final ViaCepClient viaCepClient; //
+Cliente Feign (API externa) public Funcionario incluir(Funcionario funcionario) { // Se o
+funcionario informou um CEP: if (funcionario.getCep() != null &&
+!funcionario.getCep().isBlank()) { String cepLimpo =
+funcionario.getCep().replaceAll("\\D", ""); // Remove nao-digitos ViaCepResponseDTO
+endereco = viaCepClient.buscarPorCep(cepLimpo); // Chama API ViaCEP // Se o CEP nao
+existe, ViaCEP retorna erro=true if (Boolean.TRUE.equals(endereco.getErro())) { throw new
+CustomBeanException("CEP invalido para consulta no ViaCEP"); } // Preenche os campos de
+endereco automaticamente funcionario.setCep(endereco.getCep());
+funcionario.setLogradouro(endereco.getLogradouro());
+funcionario.setBairro(endereco.getBairro());
+funcionario.setLocalidade(endereco.getLocalidade()); funcionario.setUf(endereco.getUf());
+} return funcionarioRepository.save(funcionario); } }
+
+
+--- PAGINA 12 ---
+9. CONTROLLERS — A PORTA DE ENTRADA DA API REST
+O Controller é a camada mais externa da aplicação. Ele recebe requisições HTTP (GET, POST, PUT,
+DELETE), extrai os dados, chama o Service e devolve uma resposta HTTP.
+Verbos HTTP e o que fazem
+Verbo HTTP
+Anotação Spring
+Operação
+Status de Sucesso
+GET
+@GetMapping
+Buscar/Listar dados
+200 OK
+POST
+@PostMapping
+Criar novo recurso
+201 Created
+PUT
+@PutMapping
+Atualizar recurso existente
+200 OK
+DELETE
+@DeleteMapping
+Excluir recurso
+204 No Content
+Exemplo Completo: FilmeController.java
+@RestController // = @Controller + @ResponseBody (retorna JSON automaticamente)
+@RequestMapping("/filmes")// Todos os endpoints comecam com /filmes
+@RequiredArgsConstructor // Lombok: injeta dependencias pelo construtor @Slf4j // Lombok:
+logger automatico public class FilmeController { private final FilmeService filmeService;
+// GET /filmes → lista todos os filmes @GetMapping public List listar() {
+log.info("Listando todos os filmes"); return filmeService.listar(); } // GET /filmes/1 →
+busca filme com id=1 @GetMapping("/{id}") public ResponseEntity buscarPorId(@PathVariable
+Long id) { try { FilmeDTO filme = filmeService.buscarPorId(id); return
+ResponseEntity.ok(filme); // 200 OK com o filme } catch (Exception e) { return
+ResponseEntity.notFound().build(); // 404 Not Found } } // POST /filmes → cria novo filme
+// @Valid: dispara as validacoes do DTO (ex: @NotBlank) // @RequestBody: ler o JSON do
+corpo da requisicao @PostMapping public ResponseEntity criar(@Valid @RequestBody FilmeDTO
+filmeDTO) { FilmeDTO filmeSalvo = filmeService.salvar(filmeDTO); // Monta a URL do recurso
+criado: /filmes/1 URI location = ServletUriComponentsBuilder
+.fromCurrentRequest().path("/{id}") .buildAndExpand(filmeSalvo.getId()).toUri(); return
+ResponseEntity.created(location).body(filmeSalvo); // 201 Created } // PUT /filmes/1 →
+atualiza filme com id=1 @PutMapping("/{id}") public ResponseEntity atualizar(@PathVariable
+Long id, @Valid @RequestBody FilmeDTO filmeDTO) { try { return
+ResponseEntity.ok(filmeService.atualizar(id, filmeDTO)); // 200 OK } catch (Exception e) {
+return ResponseEntity.notFound().build(); // 404 Not Found } } // DELETE /filmes/1 →
+exclui filme com id=1 @DeleteMapping("/{id}") public ResponseEntity deletar(@PathVariable
+Long id) { try { filmeService.excluir(id); return ResponseEntity.noContent().build(); //
+204 No Content } catch (Exception e) { return ResponseEntity.notFound().build(); } } }
+
+
+--- PAGINA 13 ---
+10. BEAN VALIDATION E CUSTOM VALIDATORS — REQUISITO
+OBRIGATÓRIO
+O professor exige ao menos 1 Custom Validator. O projeto implementa o @Genero, que valida se o
+gênero informado pertence a uma lista pré-definida de gêneros válidos.
+Anotações de Validação Padrão (Bean Validation)
+Anotação
+O que valida?
+Onde aparece no projeto
+@NotBlank
+Não pode ser nulo nem vazio (para String)
+FilmeDTO.titulo, UsuarioDTO.nome, etc.
+@NotNull
+Não pode ser nulo (qualquer tipo)
+PedidoDTO.dataPedido, PedidoDTO.valorTotal
+@Email
+Deve ter formato de email válido (xxx@yyy.zzz)
+UsuarioDTO.email
+@DecimalMin("0.0", inclusive=false)
+Valor numérico deve ser maior que 0
+ProdutoDTO.preco, PedidoDTO.valorTotal
+@Min(value=0)
+Número inteiro mínimo
+ProdutoDTO.estoque
+@Valid
+Dispara as validações do objeto recebido
+Controllers: @RequestBody @Valid FilmeDTO
+O Custom Validator @Genero — Passo a Passo
+Um Custom Validator tem SEMPRE duas partes: a anotação e o validador.
+PARTE 1 — A anotação (Genero.java):
+@Documented // Aparece no Javadoc @Constraint(validatedBy = GeneroValidator.class) // Qual
+classe faz a validacao? @Target({ElementType.FIELD, ElementType.PARAMETER}) // Onde pode
+ser usada? @Retention(RetentionPolicy.RUNTIME) // Disponivel em tempo de execucao public
+@interface Genero { String message() default "Genero invalido"; // Mensagem padrao de erro
+Class[] groups() default {}; Class[] payload() default {}; }
+PARTE 2 — A lógica (GeneroValidator.java):
+public class GeneroValidator implements ConstraintValidator { // Lista de generos aceitos
+pela aplicacao private static final List GENEROS_VALIDOS = Arrays.asList( "Acao",
+"Aventura", "Comedia", "Drama", "Terror", "Ficcao Cientifica", "Romance", "Documentario",
+"Animacao", "Musical", "Suspense", "Fantasia", "Thriller", "Crime", "Biografia", "Guerra",
+"Historia", "Faroeste", "Familia", "Esporte" ); @Override public boolean isValid(String
+genero, ConstraintValidatorContext context) { // Se o campo for nulo ou vazio, deixa
+passar (outros validators cuidam disso) if (genero == null || genero.isBlank()) { return
+true; } // Retorna true se o genero informado esta na lista, false caso contrario return
+GENEROS_VALIDOS.contains(genero.trim()); } }
+Como usar na entidade:
+// Dentro de Filme.java: @Column(length = 50) @Genero // Nossa anotacao customizada!
+private String genero; // Se o valor nao estiver na lista, Spring retorna 400 Bad Request
+
+
+--- PAGINA 14 ---
+11. TRATAMENTO GLOBAL DE ERROS — GlobalExceptionHandler
+Em vez de tratar erros em cada Controller separadamente, o projeto usa um handler global que captura
+exceções de qualquer Controller e retorna respostas padronizadas no formato JSON.
+Como funciona o GlobalExceptionHandler.java?
+@RestControllerAdvice // Intercepta excecoes de TODOS os controllers public class
+GlobalExceptionHandler { // Captura erros de validacao (quando @Valid falha)
+@ExceptionHandler(MethodArgumentNotValidException.class) public ResponseEntity>
+handleValidationException( MethodArgumentNotValidException ex, HttpServletRequest request)
+{ Map body = new LinkedHashMap<>(); body.put("timestamp", LocalDateTime.now());
+body.put("status", 400); body.put("error", "Bad Request"); body.put("message", "Dados
+invalidos na requisicao"); body.put("path", request.getRequestURI()); // Coleta todos os
+erros de campo Map fieldErrors = new HashMap<>();
+ex.getBindingResult().getAllErrors().forEach(error -> { String fieldName = ((FieldError)
+error).getField(); String errorMessage = error.getDefaultMessage();
+fieldErrors.put(fieldName, errorMessage); }); body.put("errors", fieldErrors); return
+ResponseEntity.badRequest().body(body); // HTTP 400 } // Captura nossa excecao customizada
+(CustomBeanException) @ExceptionHandler(CustomBeanException.class) public ResponseEntity>
+handleCustomBeanException( CustomBeanException ex, HttpServletRequest request) { // Monta
+resposta JSON de erro e retorna 400 ... } // Captura qualquer outra excecao nao tratada
+@ExceptionHandler(Exception.class) public ResponseEntity> handleGenericException(
+Exception ex, HttpServletRequest request) { // Retorna 500 Internal Server Error ... } }
+Exemplo de Resposta de Erro (JSON)
+// Quando POST /filmes e chamado sem titulo (campo obrigatorio): { "timestamp":
+"2026-05-29T10:30:00", "status": 400, "error": "Bad Request", "message": "Dados invalidos
+na requisicao", "path": "/filmes", "errors": { "titulo": "O titulo e obrigatorio" } }
+A CustomBeanException
+// Excecao customizada para regras de negocio da aplicacao public class
+CustomBeanException extends RuntimeException { public CustomBeanException(String message)
+{ super(message); } } // Uso no FuncionarioService: if
+(Boolean.TRUE.equals(endereco.getErro())) { throw new CustomBeanException("CEP invalido
+para consulta no ViaCEP"); // O GlobalExceptionHandler captura e retorna JSON de erro com
+status 400 }
+
+
+--- PAGINA 15 ---
+12. INTEGRAÇÃO COM API EXTERNA — OpenFeign e ViaCEP
+O projeto consome a API ViaCEP (viacep.com.br) para buscar dados de endereço a partir do CEP. Isso é
+feito usando o OpenFeign, uma biblioteca que cria clientes HTTP de forma declarativa (você só declara a
+interface, o Feign faz o resto).
+ViaCepClient.java — O Cliente Feign
+@FeignClient( name = "viaCepClient", url = "${viacep.url:https://viacep.com.br/ws}" // URL
+vem do application.properties ) public interface ViaCepClient { // Faz GET para:
+https://viacep.com.br/ws/{cep}/json/ // Retorna os dados mapeados no ViaCepResponseDTO
+@GetMapping("/{cep}/json/") ViaCepResponseDTO buscarPorCep(@PathVariable("cep") String
+cep); }
+ViaCepResponseDTO.java — Os Dados que Voltam
+@Data public class ViaCepResponseDTO { private String cep; // Ex: "58000-000" private
+String logradouro; // Ex: "Avenida Epitacio Pessoa" private String bairro; // Ex: "Centro"
+private String localidade; // Ex: "Joao Pessoa" private String uf; // Ex: "PB"
+@JsonProperty("erro") // Campo "erro" do JSON -> atributo erro da classe private Boolean
+erro; // true se o CEP nao existir }
+Como habilitar o Feign?
+// Em TechbackApplication.java: @SpringBootApplication @EnableFeignClients // Ativa o
+suporte a Feign Clients em toda a aplicacao public class TechbackApplication { public
+static void main(String[] args) { SpringApplication.run(TechbackApplication.class, args);
+} }
+No application-dev.properties:
+# URL base da API ViaCEP (pode ser sobrescrita por variavel de ambiente)
+viacep.url=https://viacep.com.br/ws
+
+
+--- PAGINA 16 ---
+13. TESTES AUTOMATIZADOS — JUnit 5 + Mockito
+Testes automatizados verificam que o código funciona corretamente de forma automática. O projeto
+possui três tipos de testes: de Controller, de Service e de Repository.
+Tipos de Teste no Projeto
+Tipo
+Arquivo
+Técnica
+O que testa?
+Controller Test
+FilmeControllerTest.java
+@WebMvcTest + MockMvc
+Endpoints HTTP: status codes, JSON de resposta, validações
+Service Test
+FilmeServiceTest.java
+@ExtendWith(MockitoExtension.class)
+Lógica de negócio: cenários de sucesso e erro
+Repository Test
+FilmeRepositoryTest.java
+@DataJpaTest + H2
+Queries ao banco: CRUD real com banco em memória
+Mapper Test
+FilmeMapperTest.java
+Teste unitário simples
+Conversões Entity↔DTO: campos corretos, nulls
+Exemplo: FilmeServiceTest.java (Teste com Mockito)
+@ExtendWith(MockitoExtension.class) // Usa Mockito para criar mocks class FilmeServiceTest
+{ @Mock private FilmeRepository filmeRepository; // Mock do repository (nao acessa banco
+real) @Mock private FilmeMapper filmeMapper; // Mock do mapper @InjectMocks private
+FilmeService filmeService; // Injeta os mocks no service real @Test @DisplayName("Deve
+buscar filme por ID quando existir") void deveBuscarFilmePorIdQuandoExistir() { //
+ARRANGE: configura o que os mocks devem retornar
+when(filmeRepository.findById(1L)).thenReturn(Optional.of(filme));
+when(filmeMapper.toDTO(filme)).thenReturn(filmeDTO); // ACT: executa o metodo que esta
+sendo testado FilmeDTO resultado = filmeService.buscarPorId(1L); // ASSERT: verifica se o
+resultado e o esperado assertThat(resultado).isNotNull();
+assertThat(resultado.getId()).isEqualTo(1L); verify(filmeRepository).findById(1L); //
+Verifica que o metodo foi chamado } @Test @DisplayName("Deve lancar excecao quando buscar
+filme por ID inexistente") void deveLancarExcecaoQuandoBuscarFilmePorIdInexistente() {
+when(filmeRepository.findById(999L)).thenReturn(Optional.empty()); // Verifica que uma
+excecao e lancada com a mensagem correta assertThatThrownBy(() ->
+filmeService.buscarPorId(999L)) .isInstanceOf(RuntimeException.class) .hasMessage("Filme
+nao encontrado com o ID: 999"); } }
+Cobertura de Testes (JaCoCo)
+Para gerar o relatório de cobertura: mvn test jacoco:report. O relatório aparece em:
+target/site/jacoco/index.html
+Camada
+Cobertura Atual
+FilmeRepository
+100%
+FilmeMapper
+100%
+FilmeController
+83.2%
+FilmeService
+80.9%
+
+
+--- PAGINA 17 ---
+14. CONFIGURAÇÕES — application.properties E PERFIS
+O Spring Boot usa arquivos de propriedades para configurar o comportamento da aplicação. O projeto
+usa perfis (profiles) para ter configurações diferentes para desenvolvimento e teste.
+application.properties — Arquivo Principal
+# Define qual perfil esta ativo # Carrega application-dev.properties automaticamente
+spring.profiles.active=dev
+application-dev.properties — Perfil de Desenvolvimento
+spring.application.name=techback # Exibe mensagens de erro detalhadas na resposta HTTP
+server.error.include-message=always server.error.include-binding-errors=always # Console
+visual do H2 (banco em memoria) spring.h2.console.enabled=true spring.h2.console.path=/h2
+# Configuracao do banco H2 em arquivo (persiste entre restarts)
+spring.datasource.url=jdbc:h2:file:~/teckback20262 spring.datasource.username=sa
+spring.datasource.password= spring.datasource.driver-class-name=org.h2.Driver
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect # ddl-auto=update: Hibernate
+cria/atualiza tabelas automaticamente spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.format_sql=true # URL da API ViaCEP
+viacep.url=https://viacep.com.br/ws
+application-test.properties — Perfil de Testes
+# Banco H2 em MEMORIA (some ao terminar os testes, nao suja o banco de dev)
+spring.datasource.url=jdbc:h2:mem:testdb spring.datasource.username=sa
+spring.datasource.password=password # create-drop: cria tabelas antes dos testes e remove
+depois spring.jpa.hibernate.ddl-auto=create-drop spring.h2.console.enabled=false # Nao
+precisa do console nos testes # Logs detalhados para debug durante os testes
+logging.level.br.uniesp.si.techback=DEBUG logging.level.org.hibernate.SQL=DEBUG
+URLs Importantes Quando a Aplicação Está Rodando
+URL
+O que acessa?
+http://localhost:8080
+API principal
+http://localhost:8080/swagger-ui.html
+Documentação Swagger UI (testar endpoints visualmente)
+http://localhost:8080/v3/api-docs
+Especificação OpenAPI em JSON
+http://localhost:8080/h2
+Console visual do banco H2
+http://localhost:8080/filmes
+Lista todos os filmes (GET)
+http://localhost:8080/funcionarios
+Lista todos os funcionários (GET)
+
+
+--- PAGINA 18 ---
+15. REQUISITOS DO PROFESSOR — ONDE ESTÁ CADA UM NO
+CÓDIGO
+O professor (Rodrigo Fujioka) definiu critérios de aceite no PROJETO_20261.md. Veja onde cada um foi
+implementado:
+Requisito do Professor
+Status
+Onde está no código?
+Modelo relacional fiel às tabelas
+■
+Entidades: Filme.java, Usuario.java, Cliente.java, Produto.java, Categoria.java, Pedido.java, Funcionario.java
+APIs REST implementadas
+■
+Controllers: FilmeController, UsuarioController, ClienteController, ProdutoController, CategoriaController, PedidoController, FuncionarioController
+Ao menos 1 Custom Validator
+■
+@Genero (Genero.java + GeneroValidator.java) — usado em Filme.java no campo genero
+Consultas JPQL (mínimo 4)
+■
+FilmeRepository.java: listarFilmesOrdenados(), findAllByOrderByTituloAsc(), findByGeneroAndTitulo(), buscarPorGenero()
+Lombok em todas as entidades
+■
+@Data, @Builder, @NoArgsConstructor, @AllArgsConstructor em todos os Models e DTOs
+Erros padronizados + logs
+■
+GlobalExceptionHandler.java (erros JSON), @Slf4j nos Services e Controllers (logs)
+Integração com API externa
+■
+ViaCepClient.java (Feign) + FuncionarioService.java consumindo ViaCEP
+Bean Validation nas entradas
+■
+@NotBlank, @Email, @DecimalMin, @NotNull em todos os DTOs + @Valid nos Controllers
+Documentação Swagger
+■
+springdoc-openapi — acessível em /swagger-ui.html
+Testes unitários e integração
+■
+FilmeControllerTest, FilmeServiceTest, FilmeRepositoryTest, FilmeMapperTest
+Cobertura >80%
+■
+JaCoCo: Repository 100%, Mapper 100%, Controller 83.2%, Service 80.9%
+DTOs para input/output
+■
+FilmeDTO, UsuarioDTO, ClienteDTO, ProdutoDTO, PedidoDTO, CategoriaDTO, FuncionarioDTO
+Separação em camadas
+■
+controller/, service/, repository/, model/, dto/, mapper/ — todos separados
+
+
+--- PAGINA 19 ---
+16. COMO EXPLICAR NA APRESENTAÇÃO — ROTEIRO E FRASES
+Use este roteiro como guia. Fale com confiança — você fez esse projeto!
+Introdução (1-2 minutos)
+"O projeto IESPFLIX é uma API REST desenvolvida com Spring Boot 3. Ela simula o backend de um
+serviço de streaming, onde é possível gerenciar filmes, usuários, funcionários e outras entidades. Toda a
+comunicação é feita através de requisições HTTP com respostas em JSON."
+Explicando a Arquitetura (2-3 minutos)
+"O projeto segue a arquitetura em camadas. Quando uma requisição chega, ela passa pelo Controller,
+que valida os dados e chama o Service. O Service contém a lógica de negócio e chama o Repository, que
+acessa o banco de dados H2. Os dados retornam como DTOs, não como entidades diretamente, para
+proteger informações sensíveis e ter controle sobre o que é exposto."
+Explicando o Custom Validator (1-2 minutos)
+"Um dos requisitos era criar um Custom Validator. Implementei o @Genero, que é uma anotação
+customizada usada no campo gênero da entidade Filme. O GeneroValidator verifica se o gênero
+informado está em uma lista pré-definida de gêneros válidos. Se não estiver, o Spring automaticamente
+retorna um erro 400 Bad Request com a mensagem de erro."
+Explicando as Queries JPQL (1-2 minutos)
+"Para as consultas JPQL, implementei no FilmeRepository. JPQL é como SQL, mas opera sobre os
+objetos Java. Por exemplo, listarFilmesOrdenados() usa JPQL para trazer todos os filmes ordenados
+alfabeticamente pelo título. Também implementei busca por gênero com parâmetros nomeados."
+Explicando a Integração Externa (1-2 minutos)
+"O projeto integra com a API ViaCEP usando OpenFeign. Quando cadastro um funcionário com CEP, o
+sistema automaticamente consulta a API e preenche logradouro, bairro, cidade e estado. Se o CEP for
+inválido, o ViaCEP retorna erro=true e lançamos uma CustomBeanException, que é capturada pelo
+GlobalExceptionHandler e retorna uma resposta de erro formatada."
+Explicando os Testes (1-2 minutos)
+"O projeto possui testes em três camadas. Nos testes de Controller, uso MockMvc para simular
+requisições HTTP sem subir o servidor. Nos testes de Service, uso Mockito para criar mocks do
+Repository e do Mapper, testando apenas a lógica. Nos testes de Repository, uso @DataJpaTest com
+banco H2 em memória para testar as queries reais. A cobertura está acima de 80%."
+Perguntas Frequentes na Apresentação
+■ Por que usar DTO e não a entidade diretamente?
+■ Para ter controle sobre o que é exposto na API, separar validações da persistência e evitar expor dados
+sensíveis como senha.
+■ O que é @Transactional?
+■ Garante que uma operação seja atômica: se algo falhar no meio, o banco reverte tudo ao estado
+anterior.
+
+
+--- PAGINA 20 ---
+■ O que é Lombok?
+■ Uma biblioteca que gera código repetitivo (getters, setters, construtores, toString) automaticamente em
+tempo de compilação. Reduz boilerplate.
+■ O que é Swagger?
+■ Uma ferramenta de documentação automática. O SpringDoc OpenAPI lê as anotações do código e
+gera uma interface visual em /swagger-ui.html para testar a API.
+■ Por que H2 e não PostgreSQL?
+■ H2 é um banco em memória, ideal para desenvolvimento porque não precisa instalar nada. Para
+produção, o projeto está preparado para PostgreSQL (tem config no SETUP.md).
+■ O que é Bean Validation?
+■ Um conjunto de anotações (@NotBlank, @Email, etc.) que valida dados automaticamente quando você
+coloca @Valid no parâmetro do Controller.
+■ O que é JaCoCo?
+■ Plugin Maven que analisa quais linhas de código foram executadas durante os testes e gera um
+relatório de cobertura em porcentagem.
+
+
+--- PAGINA 21 ---
+RESUMÃO FINAL — MAPA MENTAL DO PROJETO
+COMPONENTE
+ARQUIVO(S)
+FUNÇÃO
+Entidades (Model)
+Filme, Usuario, Cliente,
+Produto, Categoria,
+Pedido, Funcionario
+Mapeiam tabelas do banco. Usam @Entity, @Table, @Column e Lombok.
+DTOs
+FilmeDTO, UsuarioDTO,
+ClienteDTO, etc.
+Objetos de entrada/saída da API. Têm anotações de validação.
+Mappers
+FilmeMapper (ModelMapper),
+ClienteMapper, etc.
+Convertem entre Entity e DTO (toEntity() e toDTO()).
+Repositories
+FilmeRepository,
+FuncionarioRepository, etc.
+Acessam o banco. FilmeRepository tem JPQL customizado.
+Services
+FilmeService, FuncionarioService,
+UsuarioService, etc.
+Lógica de negócio, validações, chamam Repository.
+Controllers
+FilmeController, UsuarioController,
+FuncionarioController, etc.
+Endpoints REST. Recebem HTTP, validam com @Valid, chamam Service.
+Custom Validator
+Genero.java +
+GeneroValidator.java
+Valida se o gênero é um dos 20 gêneros pré-definidos.
+Exception Handler
+GlobalExceptionHandler.java
+CustomBeanException.java
+Captura exceções e retorna JSON padronizado de erro.
+Feign Client
+ViaCepClient.java
+ViaCepResponseDTO.java
+Consome API ViaCEP para buscar endereço por CEP.
+Testes
+FilmeControllerTest,
+FilmeServiceTest,
+FilmeRepositoryTest,
+FilmeMapperTest
+JUnit 5 + Mockito + MockMvc. Cobertura >80%.
+Configurações
+application.properties
+application-dev.properties
+application-test.properties
+Perfis Spring: dev usa H2 arquivo, test usa H2 memória.
+Build/Deps
+pom.xml
+Maven: define Spring Boot, Lombok, H2, Feign, SpringDoc, JaCoCo.
+■ Você consegue! Lembre: você construiu esse projeto. Explique o que cada parte faz com suas
+palavras. O professor quer ver que você ENTENDE, não que decorou. Boa sorte na apresentação!
+■

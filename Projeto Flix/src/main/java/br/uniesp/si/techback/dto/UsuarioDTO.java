@@ -2,6 +2,7 @@ package br.uniesp.si.techback.dto;
 
 import br.uniesp.si.techback.validation.CpfCnpj;
 import br.uniesp.si.techback.validation.SenhaForte;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ public class UsuarioDTO {
     @Email(message = "E-mail inválido")
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @SenhaForte
     private String senha;
 

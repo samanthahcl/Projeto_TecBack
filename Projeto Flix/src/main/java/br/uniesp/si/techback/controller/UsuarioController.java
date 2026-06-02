@@ -1,5 +1,6 @@
 package br.uniesp.si.techback.controller;
 
+import br.uniesp.si.techback.dto.CadastroUsuarioDTO;
 import br.uniesp.si.techback.dto.UsuarioDTO;
 import br.uniesp.si.techback.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -16,10 +17,10 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // RF1 - cadastrar usuário
+    // RF1 - cadastrar usuário e cartão inicial para assinatura
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioDTO criar(@Valid @RequestBody UsuarioDTO dto) {
+    public UsuarioDTO criar(@Valid @RequestBody CadastroUsuarioDTO dto) {
         return usuarioService.criar(dto);
     }
 

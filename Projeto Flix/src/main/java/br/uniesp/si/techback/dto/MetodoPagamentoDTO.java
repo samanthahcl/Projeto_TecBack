@@ -1,5 +1,6 @@
 package br.uniesp.si.techback.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -34,5 +35,6 @@ public class MetodoPagamentoDTO {
     private String nomePortador;
 
     @NotBlank(message = "Token do gateway é obrigatório")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String tokenGateway;
 }

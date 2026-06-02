@@ -1,5 +1,6 @@
 package br.uniesp.si.techback.config;
 
+import br.uniesp.si.techback.repository.UsuarioRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,8 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -23,14 +24,26 @@ public class SecurityConfig {
 
     // Usuário administrador para cumprir RF11
     @Bean
-    public UserDetailsService userDetailsService(BCryptPasswordEncoder encoder) {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(encoder.encode("admin123"))
-                .roles("ADMIN")
-                .build();
+    public UserDetailsService userDetailsService(BCryptPasswordEncoder encoder, UsuarioRepository usuarioRepository) {
+        String adminPasswordHash = encoder.encode("admin123");
 
-        return new InMemoryUserDetailsManager(admin);
+        return username -> {
+            if ("admin".equals(username)) {
+                return User.builder()
+                        .username("admin")
+                        .password(adminPasswordHash)
+                        .roles("ADMIN")
+                        .build();
+            }
+
+            return usuarioRepository.findByEmail(username)
+                    .map(usuario -> User.builder()
+                            .username(usuario.getEmail())
+                            .password(usuario.getSenhaHash())
+                            .roles(usuario.getPerfil())
+                            .build())
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+        };
     }
 
     @Bean
@@ -60,14 +73,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").permitAll()
 
                         // RF11 - Apenas ADMIN pode cadastrar, editar ou apagar conteúdos
-                        .requestMatchers(HttpMethod.POST, "/api/v1/conteudos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/conteudos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/conteudos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/conteudos", "/api/v1/conteudos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/conteudos", "/api/v1/conteudos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/conteudos", "/api/v1/conteudos/**").hasRole("ADMIN")
 
                         // Se ainda usar /filmes, protege também
                         .requestMatchers(HttpMethod.POST, "/filmes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/filmes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/filmes/**").hasRole("ADMIN")
+
+                        // RF7 - dados de cartão exigem autenticação
+                        .requestMatchers("/api/v1/metodos-pagamento/**").authenticated()
 
                         // O restante fica liberado para não quebrar seu projeto
                         .anyRequest().permitAll()

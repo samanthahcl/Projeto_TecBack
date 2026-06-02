@@ -21,9 +21,9 @@
 	</scm>
 
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<!-- CORRIGIDO: 1.18.36 resolve o TypeTag::UNKNOWN com Java 21 -->
+		<!-- Compativel com Java 17+ -->
 		<lombok.version>1.18.36</lombok.version>
 	</properties>
 
@@ -133,7 +133,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<!-- CORRIGIDO: 3.13.0 tem melhor suporte ao Java 21 + Lombok -->
+				<!-- Compilacao com a versao Java definida acima -->
 				<version>3.13.0</version>
 				<configuration>
 					<release>${java.version}</release>

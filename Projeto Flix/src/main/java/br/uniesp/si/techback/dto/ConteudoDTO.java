@@ -16,6 +16,7 @@ public class ConteudoDTO {
     private String titulo;
 
     @NotBlank(message = "Tipo é obrigatório (FILME ou SERIE)")
+    @Pattern(regexp = "(?i)FILME|SERIE", message = "Tipo deve ser FILME ou SERIE")
     private String tipo;
 
     @NotNull(message = "Ano é obrigatório")

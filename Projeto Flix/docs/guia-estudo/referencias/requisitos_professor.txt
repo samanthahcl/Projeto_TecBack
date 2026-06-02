@@ -1,0 +1,284 @@
+# Tec_back_2024.pdf
+# paginas: 8
+
+
+--- PAGINA 1 ---
+ 
+ 
+ 
+ 
+Documento de Especificação de 
+Requisitos de Software 
+ 
+para 
+Plataforma de Streaming 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+<nome do projeto> 
+ 
+Desenvolvido por: <autores> 
+Versão: <versão> 
+Data de criação: <data> 
+Github: <link> 
+ 
+
+
+--- PAGINA 2 ---
+Software Requirements Specification for <Project> Página ii 
+ 
+ 
+Tabela de Conteúdo 
+Tabela de Conteúdo .................................................................................................................. ii 
+Histórico de revisão .................................................................................................................. ii 
+1. Entendendo o negócio ........................................................................................................ 1 
+1.1 Contexto do projeto ...................................................................................................... 1 
+1.2 Escopo do projeto ........................................................................................................ 2 
+2. Funcionalidades do sistema proposto ............................................................................... 3 
+2.1 Requisitos funcionais ................................................................................................... 3 
+2.2 Requisitos não funcionais ............................................................................................ 5 
+3. Avaliação do Projeto ........................................................................................................... 7 
+REFERÊNCIAS ........................................................................................................................... 8 
+Histórico de revisão 
+ 
+Nome Data Motivo da mudança Versão 
+Versão inicial 23/03/2024 Versão recebida do fornecedor 1.1 
+    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+--- PAGINA 3 ---
+Pág. 3 
+ 
+ 
+1. Entendendo o negócio 
+Este documento apresenta o contexto, o escopo e as funcionalidades a serem desenvolvidas 
+para a implantação de um Sistema de Streaming concorrente a Netflix o IESPFLIX.  Este projeto 
+pode ser entregue caso não tenham nenhum em mente.  PORÉM, desde que observados os pontos 
+a serem avaliados no item 5, podem fazer a integração com o projeto de outras disciplinas no back 
+end, com outros visuais e outros requisitos.  
+ 
+1.1 Contexto do projeto 
+ 
+A Netflix foi fundada por  Reed Hastings e Marc Randolph em 1997. Na época, a empresa 
+trabalhava com locação de filmes, mas um ano mais tarde o serviço passou a oferecer entrega de 
+DVDs pelos Correios através do site da companhia.  Atualmente, a Netflix oferece filmes e séries por 
+streaming e conta com cerca de 117 milhões de assinaturas ao redor do mundo.  
+O modelo atual de negócio teve início em 2007. Na plataforma, os assinantes pagam uma 
+mensalidade e têm acesso a milhares de títulos 24 horas por dia. Além da transmissão de filmes e 
+séries de terceiros, desde 2013 a Netflix vem produzindo conteúdos originais. 
+São 158 milhões de assinaturas pagas em mais de 190 países assistindo a séries, 
+documentários e filmes de diversos gêneros e idiomas. O assinante Netflix pode assistir a quantos 
+filmes e séries quiser, quando e onde quiser, em praticamente qualquer tela co m conexão à internet. 
+O assinante pode assistir, pausar e voltar a assistir a um título sem comerciais e sem compromisso. 
+A missão da Netflix é permitir que o acesso a filmes e programas de TV seja simples. Para 
+isso, basta que o usuário faça um cadastro na plataforma e desfrute do serviço gratuitamente por 30 
+dias. Após o período de teste, o usuário pode se tornar assinante,  ficando responsável por um 
+pagamento mensal para ter acesso ilimitado aos títulos. 
+Neste contexto, este projeto tem por objetivo desenvolver  uma plataforma de streaming de 
+filmes e séries concorrente à Netflix.  
+ 
+ 
+1.2 Escopo do projeto 
+ 
+Este projeto deverá ser executado seguindo os requisitos funcionais e não funcionais 
+propostos neste projeto.  Existe um conjunto de requisitos funcionais que já foram levantados e 
+projetados, e neste caso a equipe deverá apenas realizar a implementação do que é solicitado  e 
+marcados como obrigatórios.   
+Ajustes dentro do domínio escolhido e proposta de novos requisitos desde que alinhados com 
+os pontos que serão avaliados serão permitidos.  
+
+--- PAGINA 4 ---
+Pág. 4 
+ 
+1.3 Modelo de Negócio 
+ 
+A Figura 1 representa o modelo canvas da Netflix. 
+ 
+Figura 1. Modelo canvas de negócio da Netflix (PEREIRA, 2016). 
+ 
+ 
+
+
+--- PAGINA 5 ---
+Pág. 5 
+ 
+2. Funcionalidades do sistema proposto 
+Nesta seção são descritos os requisitos funcionais a serem desenvolvidos no escopo deste 
+projeto. 
+ 
+2.1 Requisitos Funcionais 
+ 
+A Tabela 1 lista os requisitos funcionais acordados e projetados. 
+ 
+Tabela 1. Lista de Requisitos Funcionais 
+ 
+ID Requisito Descrição Esforço Obrigatório 
+RF1 
+O sistema deverá possuir uma API  de cadastro 
+de usuário para assinatura da plataforma, com 
+os seguintes campos: Nome completo; data de 
+nascimento; e-mail; senha; confirmar senha; 
+número do cartão; validade do cartão; código de 
+segurança do cartão; nome do titular do cartão; 
+e, CPF/CNPJ. 
+Baixo 
+SIM 
+RF2 
+O sistema deverá fazer a confirmação do cadastro do 
+usuário por confirmação de e-mail. Médio NÃO 
+RF3 
+O sistema deverá utilizar criptografia HASH para as 
+senhas, quanado forem salvas no banco não podem 
+estar em texto puro. 
+Baixo 
+SIM 
+RF4 
+O sistema deverá possuir uma api de login para 
+autenticação do usuário. Baixo SIM 
+RF7 
+O sistema deverá permitir que altere os dados do 
+cartão após a autenticação. Médio SIM 
+RF8 
+O sistema deverá exibir informações detalhadas 
+de filmes e séries, como: Título; Gênero; Ano; 
+Duração; Relevância; Sinopse; e, Trailer. 
+Médio 
+SIM 
+RF9 
+A API deverá permitir que sejam adicionados 
+filmes e séries à uma lista de favoritos para um 
+usuário passado como parâmetro. 
+Complexo 
+NÃO 
+RF10 
+A API deverá listar separadamente os filmes e 
+séries adicionados na lista de favoritos. Médio SIM 
+RF11 
+A API deverá solicitar credenciais para um 
+usuário com perfil de administrador para 
+cadastrar os filmes e series. 
+Complexo 
+SIM 
+ 
+ 
+ 
+2.2 Requisitos Funcionais de Bonificação 
+ 
+A Tabela 2 lista os requisitos funcionais de bonificação acordados e projetados. 
+ 
+Tabela 2. Lista dos Requisitos Não Funcionais de Bonificação. 
+ 
+ID Requisito Descrição  Esforço 
+RFB 1 
+O sistema deverá possuir diferentes tipos de planos, 
+cobrando mensalidades de valores diferentes dos usuários. Médio 
+
+--- PAGINA 6 ---
+Pág. 6 
+ 
+RFB 1.1 
+Plano básico: permite o usuário assistir apenas 1 filme/série por 
+dia. Médio 
+RFB 1.2 
+Plano médio: permite o usuário assistir apenas 3 filmes/séries por 
+dia. Médio 
+RFB 1.3 
+Plano premium: permite o usuário assistir quantos filmes 
+desejar por dia. Médio 
+RFB 2 
+Restringir o acesso em diversas instâncias simultâneas de usuários 
+nos planos básico e médio. Apenas o plano premium poderá 
+possuir acesso de instâncias simultâneas. 
+Complexo 
+ 
+ 
+ 
+2.3 Requisitos Não Funcionais 
+ 
+A Tabela 3 lista os requisitos não funcionais acordados e projetados para a 1ª etapa deste 
+projeto. 
+ 
+ 
+Tabela 3. Lista dos Requisitos Não Funcionais 
+ 
+ID Requisito Descrição 
+RNF 1 Deverá ser feito o controle e versionamento do código fonte e dos artefatos do 
+projeto pelo Git. 
+RNF 2 O Sistema deve possuir um Readme.md que permita o professor executar o 
+projeto.  
+ 
+ 
+
+--- PAGINA 7 ---
+Pág. 7 
+ 
+ 
+3. Avaliação do Projeto 
+Para a Sprint de Reposição é necessário a informar os exercícios e pontos extras 
+não são considerados, apenas a nota de 0 a 10 com base na entrega do projeto.  
+  
+Entregas na data certa:   20% 
+Validação de entrada de dados com Beans Validation: 20% 
+Utilização de Services e serviços externos:  20% (Consultar Cep ou consulta de 
+Filmes em Apis como https://developers.themoviedb.org/3/getting-
+started/introduction ) 
+Persistência de dados: 10% 
+Padrões de projeto: 10% 
+Projeto no GIT: 10% 
+Documentação Swagger: 10% 
+ 
+Unidade 1:    Avaliação 4,0 + Entregas 6,0   
+* Projeto no GIT 
+* Resources, Services, Respositorys, Entities 
+* Persistência de dados   
+   
+Unidade 2:    Avaliação 4,0 + Entregas 1,0 + Apresentação 5,0 
+* Padrões de projeto 
+* Documentação Swagger  
+* Integração com serviços externos 
+* Validação de dados com Beans Validations 
+* Handlers de exceções  
+ 
+ 
+ 
+ 
+ 
+
+--- PAGINA 8 ---
+Pág. 8 
+ 
+Referências 
+(PEREIRA, 2016).  O Modelo de Negócios da Netflix. Disponível em :  
+https://analistamodelosdenegocios.com.br/modelo-de-negocio-da-netflix. Acesso em 01 de jan. 2021. 

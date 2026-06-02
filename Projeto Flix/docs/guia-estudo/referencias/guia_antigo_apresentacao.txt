@@ -1,0 +1,712 @@
+# guia_estudo_apresentacao_iespflix_samantha.pdf
+# paginas: 18
+
+
+--- PAGINA 1 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+Guia de Estudo para Apresentacao
+Projeto IESPFLIX / Techback - API REST em Spring Boot
+Aluno(a): Samantha Hellen
+Objetivo deste material: estudar o codigo do projeto e conseguir explicar, na apresentacao, o que cada 
+parte faz, onde estao os requisitos obrigatorios do professor e como testar no Swagger.
+Como usar este guia: Leia primeiro a visao geral e a tabela de requisitos. Depois estude cada modulo: Usuario, 
+Auth/Login, Conteudo, Metodo de Pagamento, Favoritos, Planos/Assinaturas, Validacoes, SecurityConfig, Swagger e fluxo 
+completo de teste.
+Fontes usadas: repositorio GitHub do projeto Projeto_TecBack e documento de requisitos 
+Tec_back_2024.pdf enviado pelo professor.
+
+--- PAGINA 2 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+Sumario
+ 1. Visao geral do trabalho do professor
+ 2. Como o projeto Spring Boot esta organizado
+ 3. Mapa dos requisitos obrigatorios RF1, RF3, RF4, RF7, RF8, RF10 e RF11
+ 4. Explicacao das camadas: Controller, Service, Repository, Model, DTO, Validation, Exception e Config
+ 5. RF1 - Cadastro de usuario
+ 6. RF3 - Senha com hash BCrypt
+ 7. RF4 - API de login
+ 8. RF7 - Alteracao dos dados do cartao
+ 9. RF8 - Detalhes de filmes e series
+ 10. RF10 - Favoritos separados por filmes e series
+ 11. RF11 - Restricao de administrador para cadastrar conteudos
+ 12. JPQL: as consultas personalizadas
+ 13. Bean Validation e Custom Validators
+ 14. Tratamento de erros
+ 15. H2, JPA e persistencia
+ 16. Swagger: como demonstrar ao professor
+ 17. Roteiro de apresentacao pronto
+ 18. Perguntas que o professor pode fazer e respostas
+ 19. Checklist final antes de entregar
+
+--- PAGINA 3 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+1. Visao geral do trabalho do professor
+O documento do professor define um sistema de streaming concorrente da Netflix, chamado IESPFLIX. A 
+ideia do sistema e permitir cadastro de usuarios, login, gerenciamento de conteudos como filmes e series, 
+favoritos, formas de pagamento, planos e assinaturas.
+Os requisitos funcionais obrigatorios que mais importam para sua apresentacao sao:
+Requisito O que o professor pede Como aparece no seu projeto
+RF1 API de cadastro de usuario para 
+assinatura da plataforma, com dados 
+pessoais, e-mail, senha, cartao e 
+CPF/CNPJ.
+UsuarioController + UsuarioService + 
+UsuarioDTO + 
+MetodoPagamentoController.
+RF3 Senha salva com criptografia HASH, 
+nunca em texto puro.
+UsuarioService usa 
+BCryptPasswordEncoder e salva em 
+senhaHash.
+RF4 API de login para autenticacao do 
+usuario.
+AuthController + AuthService em 
+POST /api/v1/auth/login.
+RF7 Permitir alterar dados do cartao apos 
+autenticacao.
+MetodoPagamentoController com PUT 
+/api/v1/metodos-pagamento/{id}.
+RF8 Exibir informacoes detalhadas de 
+filmes e series: titulo, genero, ano, 
+duracao, relevancia, sinopse e trailer.
+Conteudo, ConteudoDTO, 
+ConteudoController e 
+ConteudoService.
+RF10 Listar separadamente filmes e series 
+adicionados aos favoritos.
+FavoritoController com /filmes e 
+/series.
+RF11 Solicitar credenciais de administrador 
+para cadastrar filmes e series.
+SecurityConfig protege 
+POST/PUT/DELETE de conteudos 
+com ROLE_ADMIN.
+A avaliacao tambem considera Git, README, Swagger, persistencia com JPA, Services, Repositories, 
+Entities, validacao com Bean Validation, handlers de excecao e, quando houver, integracao externa.
+2. Como o projeto Spring Boot esta organizado
+O projeto segue uma arquitetura em camadas. Isso facilita explicar o codigo, porque cada pacote tem uma 
+responsabilidade especifica.
+Pacote Responsabilidade Exemplo no projeto
+controller Recebe as requisicoes HTTP do 
+Swagger/Postman. E a entrada da API.
+UsuarioController, ConteudoController, 
+AuthController, FavoritoController.
+service Guarda a regra de negocio. Decide o 
+que fazer, valida existencia, salva, 
+atualiza e chama repositories.
+UsuarioService, AuthService, 
+ConteudoService, FavoritoService.
+repository Conversa com o banco por meio do 
+Spring Data JPA.
+UsuarioRepository, 
+ConteudoRepository, 
+FavoritoRepository.
+model Entidades JPA. Viram tabelas no 
+banco.
+Usuario, Conteudo, Favorito, 
+MetodoPagamento.
+dto Objetos usados na entrada e saida da 
+API. Evitam expor diretamente as 
+entidades.
+UsuarioDTO, ConteudoDTO, 
+LoginRequestDTO, 
+LoginResponseDTO.
+validation Validacoes customizadas do projeto. CpfCnpj, CpfCnpjValidator, 
+
+--- PAGINA 4 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+SenhaForte, SenhaForteValidator.
+exception Tratamento centralizado de erros. GlobalExceptionHandler.
+config Configuracoes gerais do Spring, 
+seguranca, beans etc.
+SecurityConfig.
+Frase para apresentar: A arquitetura foi separada em camadas: Controller recebe a requisicao, Service executa a regra 
+de negocio, Repository acessa o banco, Model representa a tabela, DTO transporta dados e Validation garante entradas 
+validas.
+3. Fluxo geral de uma requisicao
+Quando voce clica em Execute no Swagger, acontece um fluxo parecido com este:
+1. O usuario acessa um endpoint, por exemplo POST /api/v1/usuarios.
+2. O Controller recebe o JSON da requisicao.
+3. O DTO valida os campos com anotacoes como @NotBlank, @Email, @SenhaForte e @CpfCnpj.
+4. O Controller chama o Service.
+5. O Service aplica a regra de negocio. Por exemplo: verifica se o e-mail ja existe e faz hash da senha.
+6. O Repository salva ou busca dados no banco H2.
+7. O Service transforma a Entity em DTO de resposta.
+8. A API devolve JSON para o Swagger.
+Swagger -> Controller -> DTO/Validation -> Service -> Repository -> Banco H2
+Banco H2 -> Repository -> Service -> DTO -> Controller -> Swagger
+4. RF1 - Cadastro de usuario
+O RF1 pede uma API de cadastro de usuario para assinatura da plataforma. No seu projeto, o cadastro de 
+usuario esta em POST /api/v1/usuarios. Os dados do cartao foram separados em metodo de pagamento, o 
+que e uma organizacao melhor do que colocar tudo dentro da tabela de usuario.
+Arquivos principais do RF1
+Arquivo O que faz
+UsuarioController.java Cria os endpoints /api/v1/usuarios para cadastrar, listar, 
+buscar, atualizar e deletar usuarios.
+UsuarioDTO.java Define os dados que entram e saem pela API, com 
+validacoes.
+Usuario.java Entidade JPA que vira a tabela usuarios no banco.
+UsuarioService.java Executa a regra de negocio do cadastro, inclusive hash da 
+senha.
+UsuarioRepository.java Acesso ao banco para salvar e buscar usuarios.
+UsuarioController
+O Controller e a porta de entrada da API. O endpoint de cadastro e:
+@PostMapping
+@ResponseStatus(HttpStatus.CREATED)
+public UsuarioDTO criar(@Valid @RequestBody UsuarioDTO dto) {
+
+--- PAGINA 5 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+    return usuarioService.criar(dto);
+}
+Explicacao simples:
+ @PostMapping: indica que esse metodo responde a requisicoes POST.
+ @ResponseStatus(HttpStatus.CREATED): se der certo, retorna status 201, que significa criado.
+ @Valid: manda o Spring validar o DTO antes de entrar no service.
+ @RequestBody: diz que os dados chegam no corpo da requisicao em JSON.
+ usuarioService.criar(dto): chama a regra de negocio para criar usuario.
+UsuarioDTO
+O DTO contem os campos recebidos no cadastro. Ele usa Bean Validation para bloquear dados invalidos.
+private Long id;
+@NotBlank(message = "Nome completo é obrigatório")
+@Size(max = 150)
+private String nomeCompleto;
+@NotNull(message = "Data de nascimento é obrigatória")
+private LocalDate dataNascimento;
+@NotBlank(message = "E-mail é obrigatório")
+@Email(message = "E-mail inválido")
+private String email;
+@SenhaForte
+private String senha;
+@CpfCnpj
+private String cpfCnpj;
+private String perfil;
+Isso significa que o sistema nao aceita usuario sem nome, sem data de nascimento, sem e-mail valido, 
+senha fraca ou CPF/CNPJ invalido.
+Usuario model
+A classe Usuario tem anotacoes JPA. Ela representa a tabela usuarios no banco.
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nomeCompleto;
+    private LocalDate dataNascimento;
+    private String email;
+    private String senhaHash;
+    private String cpfCnpj;
+
+--- PAGINA 6 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+    private String perfil;
+}
+A coisa mais importante para explicar aqui: no banco nao existe campo senha comum; existe senhaHash. 
+Isso ajuda no RF3.
+5. RF3 - Senha com hash BCrypt
+O RF3 exige que a senha nao fique salva em texto puro. No seu projeto, isso esta no UsuarioService.
+usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
+O metodo encode transforma a senha digitada em um hash BCrypt. Por exemplo, se a senha digitada for 
+Senha123@, o banco nao guarda esse texto. Ele guarda uma sequencia criptografada iniciada geralmente 
+por $2a$ ou $2b$.
+Como explicar ao professor: No cadastro, a senha do DTO nunca e salva diretamente. O service usa 
+BCryptPasswordEncoder para gerar um hash e salva esse resultado no campo senhaHash da entidade Usuario.
+O UsuarioService tambem evita duplicidade de e-mail:
+if (usuarioRepository.existsByEmail(dto.getEmail())) {
+    throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
+}
+Isso evita duas contas com o mesmo e-mail.
+6. RF4 - API de login
+O RF4 pede uma API de login. No seu projeto, o endpoint e:
+POST /api/v1/auth/login
+Ele aparece no Swagger como auth-controller. Voce testou com sucesso usando:
+{
+  "email": "teste@email.com",
+  "senha": "Senha123@"
+}
+E recebeu uma resposta 200 OK parecida com:
+{
+  "usuarioId": 1,
+  "nomeCompleto": "Usuário Teste",
+  "email": "teste@email.com",
+  "perfil": "USER",
+  "mensagem": "Login realizado com sucesso"
+}
+AuthController
+O AuthController apenas recebe a requisicao e chama o AuthService:
+@RestController
+
+--- PAGINA 7 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+    private final AuthService authService;
+    @PostMapping("/login")
+    public LoginResponseDTO login(@Valid @RequestBody LoginRequestDTO dto) {
+        return authService.login(dto);
+    }
+}
+LoginRequestDTO e LoginResponseDTO
+O LoginRequestDTO e o JSON de entrada do login. Ele tem email e senha.
+public class LoginRequestDTO {
+    @NotBlank
+    @Email
+    private String email;
+    @NotBlank
+    private String senha;
+}
+O LoginResponseDTO e a resposta quando o login da certo. Ele nao devolve senha. Devolve apenas 
+identificacao e mensagem.
+public class LoginResponseDTO {
+    private Long usuarioId;
+    private String nomeCompleto;
+    private String email;
+    private String perfil;
+    private String mensagem;
+}
+AuthService
+O AuthService faz a autenticacao real:
+9. Busca o usuario pelo e-mail no banco.
+10. Se nao encontrar, retorna erro 401 Unauthorized.
+11. Se encontrar, compara a senha digitada com o hash salvo.
+12. Se a senha estiver errada, retorna 401.
+13. Se estiver certa, monta LoginResponseDTO com mensagem de sucesso.
+Usuario usuario = usuarioRepository.findByEmail(dto.getEmail())
+    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "E-mail ou senha inválidos"));
+boolean senhaConfere = passwordEncoder.matches(dto.getSenha(), usuario.getSenhaHash());
+
+--- PAGINA 8 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+Ponto importante: O login nao compara texto puro com texto puro. Ele usa passwordEncoder.matches para comparar a 
+senha digitada com o hash salvo no banco.
+7. RF7 - Alterar dados do cartao
+O RF7 pede que o usuario consiga alterar dados do cartao. No seu projeto, os dados de cartao ficam em 
+MetodoPagamento.
+Endpoints principais:
+POST /api/v1/metodos-pagamento
+GET /api/v1/metodos-pagamento/usuario/{usuarioId}
+PUT /api/v1/metodos-pagamento/{id}
+DELETE /api/v1/metodos-pagamento/{id}
+MetodoPagamentoController
+O metodo que cumpre diretamente o RF7 e o PUT:
+@PutMapping("/{id}")
+public MetodoPagamentoDTO atualizar(
+        @PathVariable Long id,
+        @Valid @RequestBody MetodoPagamentoDTO dto
+) {
+    return metodoPagamentoService.atualizar(id, dto);
+}
+Explicando:
+ @PutMapping indica atualizacao de recurso existente.
+ @PathVariable Long id pega o id que vem na URL.
+ @RequestBody MetodoPagamentoDTO dto pega os novos dados do cartao.
+ O controller chama metodoPagamentoService.atualizar(id, dto).
+MetodoPagamentoService
+O service primeiro busca o metodo de pagamento pelo id. Se nao achar, retorna erro 404. Se achar, troca 
+os campos e salva novamente.
+MetodoPagamento mp = metodoPagamentoRepository.findById(id)
+    .orElseThrow(() -> new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "Método de pagamento não encontrado: " + id
+    ));
+mp.setUsuarioId(dto.getUsuarioId());
+mp.setBandeira(dto.getBandeira());
+mp.setUltimos4(dto.getUltimos4());
+mp.setMesExp(dto.getMesExp());
+mp.setAnoExp(dto.getAnoExp());
+
+--- PAGINA 9 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+mp.setNomePortador(dto.getNomePortador());
+mp.setTokenGateway(dto.getTokenGateway());
+return toDTO(metodoPagamentoRepository.save(mp));
+Como demonstrar: No Swagger, cadastre um metodo de pagamento com POST. Depois use o id retornado no PUT 
+/api/v1/metodos-pagamento/{id} para alterar, por exemplo, bandeira, validade ou nome do portador.
+8. RF8 - Exibir detalhes de filmes e series
+O RF8 pede que a API exiba informacoes detalhadas de filmes e series, como titulo, genero, ano, duracao, 
+relevancia, sinopse e trailer. No seu projeto, isso foi feito de forma mais generica usando Conteudo, porque 
+um conteudo pode ser FILME ou SERIE.
+Conteudo model
+@Entity
+@Table(name = "conteudo")
+public class Conteudo {
+    private Long id;
+    private String titulo;
+    private String tipo; // FILME ou SERIE
+    private Integer ano;
+    private Integer duracaoMinutos;
+    private BigDecimal relevancia;
+    private String sinopse;
+    private String trailerUrl;
+    private String genero;
+}
+O campo tipo diferencia se e FILME ou SERIE. Isso ajuda tambem no RF10, porque os favoritos podem ser 
+separados pelo tipo.
+ConteudoController
+Endpoints principais de conteudo:
+GET /api/v1/conteudos
+GET /api/v1/conteudos/{id}
+POST /api/v1/conteudos
+PUT /api/v1/conteudos/{id}
+DELETE /api/v1/conteudos/{id}
+GET /api/v1/conteudos/top-relevancia
+GET /api/v1/conteudos/lancados-apos
+O GET /api/v1/conteudos aceita filtros opcionais:
+ tipo: FILME ou SERIE.
+
+--- PAGINA 10 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+ genero: exemplo Aventura, Drama, Comedia.
+ q: busca por palavra no titulo.
+@GetMapping
+public List<ConteudoDTO> listar(
+    @RequestParam(required = false) String tipo,
+    @RequestParam(required = false) String genero,
+    @RequestParam(required = false) String q) { ... }
+Se q vier preenchido, busca por titulo. Se genero vier preenchido, filtra por genero. Se tipo vier preenchido, 
+filtra por FILME ou SERIE. Se nenhum filtro vier, lista todos ordenados por titulo.
+9. RF10 - Favoritos separados por filmes e series
+O RF10 pede que a API liste separadamente os filmes e series adicionados aos favoritos. No seu projeto 
+isso esta muito bem separado com tres endpoints:
+POST /api/v1/favoritos
+GET /api/v1/favoritos/usuario/{usuarioId}/filmes
+GET /api/v1/favoritos/usuario/{usuarioId}/series
+Favorito model
+A entidade Favorito liga um usuario a um conteudo. Ela nao guarda os dados do filme inteiro, apenas os 
+IDs.
+@Entity
+@Table(name = "favoritos", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"usuario_id", "conteudo_id"})
+})
+public class Favorito {
+    private Long id;
+    private Long usuarioId;
+    private Long conteudoId;
+}
+O unique constraint impede que o mesmo usuario favorite o mesmo conteudo duas vezes.
+FavoritoService
+Ao adicionar favorito, o service verifica tres coisas antes de salvar:
+14. Se o usuario existe.
+15. Se o conteudo existe.
+16. Se esse conteudo ja esta favoritado por esse usuario.
+if (!usuarioRepository.existsById(dto.getUsuarioId())) {
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+}
+if (!conteudoRepository.existsById(dto.getConteudoId())) {
+
+--- PAGINA 11 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Conteúdo não encontrado");
+}
+if (favoritoRepository.existsByUsuarioIdAndConteudoId(dto.getUsuarioId(), dto.getConteudoId())) {
+    throw new ResponseStatusException(HttpStatus.CONFLICT, "Conteúdo já está nos favoritos");
+}
+FavoritoRepository
+A separacao entre filmes e series acontece na consulta JPQL do FavoritoRepository:
+@Query("""
+SELECT c
+FROM Favorito f
+JOIN Conteudo c ON c.id = f.conteudoId
+WHERE f.usuarioId = :usuarioId
+AND UPPER(c.tipo) = UPPER(:tipo)
+ORDER BY c.titulo ASC
+""")
+List<Conteudo> listarConteudosFavoritosPorTipo(Long usuarioId, String tipo);
+Quando o service chama essa consulta com tipo FILME, ela retorna so filmes. Quando chama com SERIE, 
+retorna so series.
+Frase para apresentar: O favorito guarda apenas usuarioId e conteudoId. Para listar favoritos, o repository faz um JOIN 
+com Conteudo e filtra pelo tipo FILME ou SERIE.
+10. RF11 - Restricao de administrador
+O RF11 pede que a API solicite credenciais de administrador para cadastrar filmes e series. No seu projeto, 
+isso esta no SecurityConfig.
+SecurityConfig
+O SecurityConfig define um usuario administrador em memoria:
+UserDetails admin = User.builder()
+    .username("admin")
+    .password(encoder.encode("admin123"))
+    .roles("ADMIN")
+    .build();
+Esse usuario nao vem do banco; ele e criado para proteger os endpoints de administracao. Para 
+apresentar, voce pode dizer que e uma autenticacao simples com Basic Auth, adequada para demonstrar o 
+requisito.
+A protecao dos endpoints esta aqui:
+.requestMatchers(HttpMethod.POST, "/api/v1/conteudos/**").hasRole("ADMIN")
+.requestMatchers(HttpMethod.PUT, "/api/v1/conteudos/**").hasRole("ADMIN")
+
+--- PAGINA 12 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+.requestMatchers(HttpMethod.DELETE, "/api/v1/conteudos/**").hasRole("ADMIN")
+Isso quer dizer: para criar, editar ou deletar conteudos, precisa ser ADMIN. Mas o restante, como GET de 
+conteudos e Swagger, continua liberado.
+Como demonstrar RF11
+17. Abra o Swagger.
+18. Tente executar POST /api/v1/conteudos.
+19. Vai aparecer uma janela pedindo usuario e senha.
+20. Digite usuario: admin e senha: admin123.
+21. Depois disso, o cadastro de conteudo deve funcionar.
+Cuidado na apresentacao: Explique que RF4 e RF11 sao diferentes: RF4 e o endpoint de login da aplicacao. RF11 e a 
+restricao de admin nos endpoints de cadastro/edicao/exclusao de conteudo.
+11. JPQL: consultas personalizadas
+JPQL e uma linguagem de consulta parecida com SQL, mas em vez de consultar diretamente as tabelas, 
+consulta as entidades Java. O professor pediu 4 consultas JPQL. No seu projeto elas estao em 
+ConteudoRepository.
+Consulta Codigo conceitual O que faz
+JPQL 1 SELECT c FROM Conteudo c ORDER 
+BY c.titulo ASC
+Lista conteudos em ordem alfabetica.
+JPQL 2 WHERE LOWER(c.genero) = 
+LOWER(:genero)
+Filtra por genero ignorando 
+maiusculas/minusculas.
+JPQL 3 ORDER BY c.relevancia DESC Lista os conteudos de maior relevancia 
+primeiro.
+JPQL 4 WHERE c.ano > :ano ORDER BY 
+c.ano DESC
+Lista conteudos lancados depois de 
+determinado ano.
+Tambem existe uma busca por palavra no titulo usando LIKE:
+@Query("SELECT c FROM Conteudo c WHERE LOWER(c.titulo) LIKE LOWER(CONCAT('%', :q, '%')) ORDER BY c.titulo 
+ASC")
+Como explicar: O Repository usa JPQL quando a consulta e mais especifica do que o CRUD basico. Assim, o service 
+consegue chamar metodos como listarPorRelevancia e listarLancadosApos sem escrever SQL manual no controller.
+12. Bean Validation e Custom Validators
+Bean Validation e o conjunto de anotacoes que valida dados de entrada. No seu projeto, o principal arquivo 
+e UsuarioDTO.
+Validacoes comuns
+Anotacao Significado
+@NotBlank Nao aceita texto vazio ou nulo.
+@NotNull Nao aceita valor nulo.
+@Email Exige formato de e-mail valido.
+@Size Limita tamanho maximo ou minimo de texto.
+@Valid Ativa a validacao do DTO quando chega no controller.
+
+--- PAGINA 13 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+Custom Validator: @SenhaForte
+O projeto tem uma validacao personalizada para senha forte. Ela verifica se a senha segue regras minimas, 
+como tamanho, letra maiuscula, letra minuscula, numero e caractere especial.
+@SenhaForte
+private String senha;
+Custom Validator: @CpfCnpj
+O projeto tambem tem uma validacao personalizada para CPF/CNPJ. Ela verifica se o CPF ou CNPJ 
+informado tem estrutura valida, evitando qualquer sequencia aleatoria de numeros.
+@CpfCnpj
+private String cpfCnpj;
+Frase para apresentar: A validacao acontece antes da regra de negocio. Se o usuario envia e-mail invalido, senha fraca 
+ou CPF/CNPJ invalido, o controller nem chama o service; o Spring retorna erro de validacao.
+13. Tratamento de erros
+O tratamento de erros fica em GlobalExceptionHandler. A ideia e padronizar as respostas de erro da API.
+Exemplo: se um campo obrigatorio vier vazio, em vez de aparecer um erro tecnico enorme do Java, a API 
+retorna um JSON mais claro, com status, mensagem e caminho da requisicao.
+Esse ponto e importante porque o professor citou handlers de excecao como parte da avaliacao.
+Erros comuns que seu sistema trata
+ Erro de validacao de campos, como nome vazio ou e-mail invalido.
+ Erro de recurso nao encontrado, como usuario inexistente ou conteudo inexistente.
+ Erro de conflito, como e-mail ja cadastrado ou favorito duplicado.
+ Erro interno generico, quando algo inesperado acontece.
+Boa pratica: Nao deixar stacktrace exposto ao usuario. Seu application.properties configura server.error.include-
+stacktrace=never, o que evita mostrar detalhes tecnicos demais no retorno da API.
+14. H2, JPA e persistencia
+Persistencia significa salvar dados no banco. No projeto, a persistencia foi feita com Spring Data JPA, 
+Hibernate e H2.
+H2
+H2 e um banco de dados leve usado para desenvolvimento. Ele permite testar o projeto localmente sem 
+instalar PostgreSQL.
+spring.datasource.url=jdbc:h2:file:~/teckback20262
+spring.datasource.username=sa
+spring.datasource.password=
+
+--- PAGINA 14 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+JPA/Hibernate
+JPA e a especificacao que permite mapear classes Java para tabelas. Hibernate e a implementacao que 
+executa isso. Quando uma classe tem @Entity, ela vira uma tabela.
+@Entity
+@Table(name = "usuarios")
+public class Usuario { ... }
+Repository
+Quando uma interface estende JpaRepository, ela ganha metodos prontos como save, findById, findAll, 
+deleteById e existsById.
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+    boolean existsByEmail(String email);
+    Optional<Usuario> findByEmail(String email);
+}
+15. Swagger: como demonstrar ao professor
+Swagger e a documentacao interativa da API. Ele mostra os controllers, endpoints, schemas e permite 
+testar sem Postman.
+Acesse:
+http://localhost:8080/swagger-ui/index.html
+Roteiro de demonstracao no Swagger
+22. Cadastrar usuario: POST /api/v1/usuarios.
+23. Fazer login: POST /api/v1/auth/login.
+24. Cadastrar conteudo como admin: POST /api/v1/conteudos, usando admin/admin123.
+25. Listar conteudos: GET /api/v1/conteudos.
+26. Cadastrar metodo de pagamento: POST /api/v1/metodos-pagamento.
+27. Atualizar metodo de pagamento: PUT /api/v1/metodos-pagamento/{id}.
+28. Adicionar favorito: POST /api/v1/favoritos.
+29. Listar favoritos filmes: GET /api/v1/favoritos/usuario/{usuarioId}/filmes.
+30. Listar favoritos series: GET /api/v1/favoritos/usuario/{usuarioId}/series.
+16. Exemplos de JSON para testar
+Cadastrar usuario
+{
+  "nomeCompleto": "Usuário Teste",
+  "dataNascimento": "2000-01-01",
+  "email": "teste@email.com",
+  "senha": "Senha123@",
+  "cpfCnpj": "12345678909",
+  "perfil": "USER"
+
+--- PAGINA 15 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+}
+Login
+{
+  "email": "teste@email.com",
+  "senha": "Senha123@"
+}
+Cadastrar conteudo
+{
+  "titulo": "Matrix",
+  "tipo": "FILME",
+  "ano": 1999,
+  "duracaoMinutos": 136,
+  "relevancia": 9.50,
+  "sinopse": "Um programador descobre a verdade sobre a realidade.",
+  "trailerUrl": "https://youtube.com/trailer",
+  "genero": "Ficcao"
+}
+Cadastrar metodo de pagamento
+{
+  "usuarioId": 1,
+  "bandeira": "VISA",
+  "ultimos4": "1234",
+  "mesExp": 12,
+  "anoExp": 2030,
+  "nomePortador": "Usuario Teste",
+  "tokenGateway": "tok_abc123"
+}
+Adicionar favorito
+{
+  "usuarioId": 1,
+  "conteudoId": 1
+}
+17. Roteiro de apresentacao pronto
+Voce pode falar seguindo esta ordem:
+31. Meu projeto e uma API REST para uma plataforma de streaming chamada IESPFLIX.
+
+--- PAGINA 16 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+32. Usei Spring Boot, Spring Web, Spring Data JPA, H2, Lombok, Bean Validation, Swagger e Spring 
+Security.
+33. Organizei o codigo em camadas: controllers, services, repositories, models, DTOs, validations, 
+exceptions e config.
+34. O cadastro de usuario cumpre o RF1. Ele recebe dados pessoais e usa validacoes.
+35. O RF3 foi implementado com BCrypt: a senha nao e salva em texto puro, fica em senhaHash.
+36. O RF4 foi implementado no endpoint POST /api/v1/auth/login, que valida e-mail e senha.
+37. O RF7 foi implementado no PUT /api/v1/metodos-pagamento/{id}, permitindo atualizar dados do cartao.
+38. O RF8 foi implementado com Conteudo, que representa filmes e series com titulo, genero, ano, 
+duracao, relevancia, sinopse e trailer.
+39. O RF10 foi implementado com Favoritos: ha um endpoint para listar filmes favoritos e outro para listar 
+series favoritas.
+40. O RF11 foi implementado com Spring Security: para cadastrar, editar ou excluir conteudos, e 
+necessario usar admin/admin123.
+41. Tambem implementei consultas JPQL no ConteudoRepository, validadores customizados para senha 
+forte e CPF/CNPJ, e handlers de excecao.
+18. Perguntas que o professor pode fazer
+Por que voce usou DTO?
+Resposta: Usei DTO para separar os dados da API das entidades do banco. Assim eu controlo o que entra 
+e sai, aplico validacoes e evito expor campos sensiveis, como senhaHash.
+Onde a senha e criptografada?
+Resposta: No UsuarioService, no metodo criar, com passwordEncoder.encode(dto.getSenha()). O valor e 
+salvo em senhaHash.
+Como o login funciona?
+Resposta: O AuthService busca o usuario pelo e-mail, depois usa passwordEncoder.matches para 
+comparar a senha digitada com o hash salvo no banco. Se estiver correto, retorna LoginResponseDTO.
+Como voce separa filmes e series nos favoritos?
+Resposta: O FavoritoRepository faz um JOIN entre Favorito e Conteudo e filtra pelo campo tipo, usando 
+FILME ou SERIE.
+Como o admin e exigido?
+Resposta: No SecurityConfig, os endpoints POST, PUT e DELETE de /api/v1/conteudos exigem 
+hasRole("ADMIN"). O usuario admin e criado em memoria com admin/admin123.
+O que e JPQL?
+Resposta: JPQL e uma linguagem de consulta orientada a entidades Java. Em vez de consultar tabelas 
+diretamente, consulto a entidade Conteudo.
+O que o Swagger faz?
+Resposta: O Swagger gera a documentacao interativa da API e permite testar os endpoints diretamente no 
+navegador.
+Qual banco voce usou?
+Resposta: Usei H2 em arquivo para desenvolvimento, com Spring Data JPA e Hibernate para persistencia.
+
+--- PAGINA 17 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+19. Checklist final antes de entregar
+Item Status esperado
+Projeto roda sem erro Executar e ver Tomcat started on port 8080.
+Swagger abre http://localhost:8080/swagger-ui/index.html.
+RF1 POST /api/v1/usuarios funciona.
+RF3 Senha e salva com BCrypt em senhaHash.
+RF4 POST /api/v1/auth/login retorna 200 OK com usuario 
+cadastrado.
+RF7 PUT /api/v1/metodos-pagamento/{id} aparece e funciona.
+RF8 GET /api/v1/conteudos e GET /api/v1/conteudos/{id} 
+mostram dados detalhados.
+RF10 Endpoints /filmes e /series em favoritos aparecem no 
+Swagger.
+RF11 POST /api/v1/conteudos pede admin/admin123.
+JPQL ConteudoRepository tem 4 consultas com @Query.
+Validacoes UsuarioDTO tem @Email, @SenhaForte e @CpfCnpj.
+GitHub atualizado Rodar git status e garantir working tree clean.
+20. Comandos uteis
+Rodar projeto
+.\mvnw.cmd spring-boot:run
+Compilar
+.\mvnw.cmd clean compile
+Testar tudo
+.\mvnw.cmd test
+Subir para GitHub
+git status
+git add -A
+git commit -m "Atualiza projeto IESPFLIX"
+git push origin main
+Ver se esta tudo enviado
+git status
+# esperado: nothing to commit, working tree clean
+
+--- PAGINA 18 ---
+Guia de Estudo - IESPFLIX / Techback
+Material de estudo para apresentacao - Samantha Hellen
+21. Observacoes finais para a apresentacao
+O ponto mais importante e nao tentar decorar tudo. Entenda o fluxo: o Controller recebe, o DTO valida, o 
+Service faz a regra, o Repository conversa com o banco e o Model representa a tabela.
+Quando o professor perguntar sobre requisitos, responda sempre ligando o requisito ao endpoint e ao 
+arquivo do codigo. Exemplo: RF4 esta no AuthController e AuthService; RF10 esta no FavoritoController, 
+FavoritoService e FavoritoRepository.
+Se voce esquecer um detalhe, abra o Swagger e mostre o endpoint. O Swagger e a prova visual de que a 
+API esta documentada e testavel.
+Resumo em uma frase: O IESPFLIX e uma API REST em Spring Boot para streaming, com cadastro, login, conteudos, 
+favoritos, pagamentos, planos, assinaturas, validacoes, persistencia, Swagger e seguranca para administrador.
+Referencias consultadas
+Documento de requisitos Tec_back_2024.pdf enviado pelo professor, especialmente as paginas 5 a 7, onde 
+aparecem os requisitos funcionais e criterios de avaliacao.
+Repositorio GitHub: https://github.com/samanthahcl/Projeto_TecBack
+Arquivos principais consultados no GitHub: UsuarioController.java, UsuarioService.java, Usuario.java, 
+UsuarioDTO.java, AuthController.java, AuthService.java, ConteudoController.java, ConteudoService.java, 
+Conteudo.java, ConteudoRepository.java, FavoritoController.java, FavoritoService.java, Favorito.java, 
+FavoritoRepository.java, MetodoPagamentoService.java e SecurityConfig.java.

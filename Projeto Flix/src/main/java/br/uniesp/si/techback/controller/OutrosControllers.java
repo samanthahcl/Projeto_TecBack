@@ -1,6 +1,7 @@
 package br.uniesp.si.techback.controller;
 
 import br.uniesp.si.techback.dto.AssinaturaDTO;
+import br.uniesp.si.techback.dto.AtualizacaoCartaoDTO;
 import br.uniesp.si.techback.dto.MetodoPagamentoDTO;
 import br.uniesp.si.techback.dto.PlanoDTO;
 import br.uniesp.si.techback.service.AssinaturaService;
@@ -9,6 +10,7 @@ import br.uniesp.si.techback.service.PlanoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -88,27 +90,28 @@ class MetodoPagamentoController {
     // RF7 - cadastrar cartão
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MetodoPagamentoDTO cadastrar(@Valid @RequestBody MetodoPagamentoDTO dto) {
-        return metodoPagamentoService.cadastrar(dto);
+    public MetodoPagamentoDTO cadastrar(@Valid @RequestBody MetodoPagamentoDTO dto, Authentication authentication) {
+        return metodoPagamentoService.cadastrar(dto, authentication.getName());
     }
 
     // RF7 - alterar dados do cartão
     @PutMapping("/{id}")
     public MetodoPagamentoDTO atualizar(
             @PathVariable Long id,
-            @Valid @RequestBody MetodoPagamentoDTO dto
+            @Valid @RequestBody AtualizacaoCartaoDTO dto,
+            Authentication authentication
     ) {
-        return metodoPagamentoService.atualizar(id, dto);
+        return metodoPagamentoService.atualizar(id, dto, authentication.getName());
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<MetodoPagamentoDTO> listarPorUsuario(@PathVariable Long usuarioId) {
-        return metodoPagamentoService.listarPorUsuario(usuarioId);
+    public List<MetodoPagamentoDTO> listarPorUsuario(@PathVariable Long usuarioId, Authentication authentication) {
+        return metodoPagamentoService.listarPorUsuario(usuarioId, authentication.getName());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remover(@PathVariable Long id) {
-        metodoPagamentoService.remover(id);
+    public void remover(@PathVariable Long id, Authentication authentication) {
+        metodoPagamentoService.remover(id, authentication.getName());
     }
 }

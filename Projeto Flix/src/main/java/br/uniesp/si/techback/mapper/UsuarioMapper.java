@@ -13,7 +13,6 @@ public class UsuarioMapper {
                 .nomeCompleto(dto.getNomeCompleto())
                 .dataNascimento(dto.getDataNascimento())
                 .email(dto.getEmail())
-                .senhaHash(dto.getSenha())
                 .cpfCnpj(dto.getCpfCnpj())
                 .perfil(dto.getPerfil())
                 .build();
@@ -25,7 +24,6 @@ public class UsuarioMapper {
                 .nomeCompleto(u.getNomeCompleto())
                 .dataNascimento(u.getDataNascimento())
                 .email(u.getEmail())
-                .senha(u.getSenhaHash())
                 .cpfCnpj(u.getCpfCnpj())
                 .perfil(u.getPerfil())
                 .build();

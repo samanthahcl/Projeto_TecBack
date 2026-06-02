@@ -1,5 +1,6 @@
 package br.uniesp.si.techback.service;
 
+import br.uniesp.si.techback.dto.CadastroUsuarioDTO;
 import br.uniesp.si.techback.dto.UsuarioDTO;
 import br.uniesp.si.techback.model.Usuario;
 import br.uniesp.si.techback.repository.UsuarioRepository;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -17,11 +19,20 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final MetodoPagamentoService metodoPagamentoService;
 
-    public UsuarioDTO criar(UsuarioDTO dto) {
-        // verifica se o e-mail já existe
+    @Transactional
+    public UsuarioDTO criar(CadastroUsuarioDTO dto) {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
+        }
+
+        if (usuarioRepository.existsByCpfCnpj(dto.getCpfCnpj())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CPF/CNPJ já cadastrado");
+        }
+
+        if (!dto.getSenha().equals(dto.getConfirmarSenha())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha e confirmação de senha não conferem");
         }
 
         Usuario usuario = new Usuario();
@@ -29,12 +40,13 @@ public class UsuarioService {
         usuario.setDataNascimento(dto.getDataNascimento());
         usuario.setEmail(dto.getEmail());
         usuario.setCpfCnpj(dto.getCpfCnpj());
-        usuario.setPerfil(dto.getPerfil() == null ? "USER" : dto.getPerfil().toUpperCase());
+        usuario.setPerfil("USER");
 
         // RF3 - guardar senha como hash BCrypt
         usuario.setSenhaHash(passwordEncoder.encode(dto.getSenha()));
 
         Usuario salvo = usuarioRepository.save(usuario);
+        metodoPagamentoService.cadastrarCartaoInicial(salvo.getId(), dto);
         return toDTO(salvo);
     }
 

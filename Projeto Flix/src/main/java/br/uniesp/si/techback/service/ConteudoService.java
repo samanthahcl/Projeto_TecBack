@@ -40,7 +40,7 @@ public class ConteudoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conteúdo não encontrado: " + id));
 
         conteudo.setTitulo(dto.getTitulo());
-        conteudo.setTipo(dto.getTipo());
+        conteudo.setTipo(dto.getTipo().toUpperCase());
         conteudo.setAno(dto.getAno());
         conteudo.setDuracaoMinutos(dto.getDuracaoMinutos());
         conteudo.setRelevancia(dto.getRelevancia());

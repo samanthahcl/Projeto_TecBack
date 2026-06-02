@@ -1,199 +1,151 @@
-# Techback - Backend 1 Uniesp
+# IESPFLIX - Projeto Flix Backend
 
-Projeto Spring Boot desenvolvido como parte da disciplina de Backend 1 da Uniesp, demonstrando boas práticas de desenvolvimento Java com arquitetura em camadas e testes abrangentes.
+API REST de uma plataforma de streaming desenvolvida com Spring Boot. O projeto cobre cadastro
+de usuários, autenticação, catálogo de filmes e séries, favoritos, cartões tokenizados, planos e
+assinaturas.
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias
 
-- **Java 21** - Última versão LTS do Java
-- **Spring Boot 3.5.10** - Framework principal
-- **Spring Data JPA** - Persistência de dados
-- **H2 Database** - Banco de dados em memória para desenvolvimento
-- **SpringDoc OpenAPI 2.8.6** - Documentação de API
-- **Lombok 1.18.32** - Redução de código boilerplate
-- **JUnit 5** - Framework de testes
-- **Mockito** - Framework para mocks em testes
-- **JaCoCo** - Análise de cobertura de testes
+- Java 17+
+- Spring Boot 3.5
+- Spring Web, Spring Data JPA e Bean Validation
+- Spring Security com HTTP Basic e BCrypt
+- H2 Database
+- SpringDoc OpenAPI / Swagger UI
+- OpenFeign com integração ViaCEP
+- JUnit, Mockito e JaCoCo
 
-## 📁 Estrutura do Projeto
+## Pré-requisitos
 
-```
-src/main/java/br/uniesp/si/techback/
-├── controller/          # Camada de controle REST
-│   └── FilmeController.java
-├── service/            # Camada de lógica de negócio
-│   └── FilmeService.java
-├── repository/         # Camada de acesso a dados
-│   └── FilmeRepository.java
-├── model/             # Entidades JPA
-│   └── Filme.java
-├── dto/               # Data Transfer Objects
-│   └── FilmeDTO.java
-├── mapper/            # Conversores entre Entity e DTO
-│   └── FilmeMapper.java
-└── TechbackApplication.java
+- Java 17 ou superior disponível no `PATH`
+- Conexão com a internet na primeira execução do Maven Wrapper
 
-src/test/java/br/uniesp/si/techback/
-├── controller/        # Testes do controller
-├── service/          # Testes do service
-├── repository/       # Testes do repository
-└── mapper/           # Testes do mapper
+O Maven não precisa estar instalado globalmente.
+
+## Executar
+
+No Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
 ```
 
-## 🎯 Funcionalidades
+No Linux ou macOS:
 
-API REST para gerenciamento de filmes com as seguintes operações:
+```bash
+./mvnw spring-boot:run
+```
 
-- **GET /filmes** - Listar todos os filmes
-- **GET /filmes/{id}** - Buscar filme por ID
-- **POST /filmes** - Criar novo filme
-- **PUT /filmes/{id}** - Atualizar filme existente
-- **DELETE /filmes/{id}** - Excluir filme
+A aplicação inicia em `http://localhost:8080`.
 
-### Modelo de Dados
+Links úteis:
 
-**FilmeDTO:**
-```json
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- Console H2: `http://localhost:8080/h2`
+
+Configuração do H2:
+
+- JDBC URL: `jdbc:h2:file:~/teckback20262`
+- Usuário: `sa`
+- Senha: vazia
+
+## Fluxos Obrigatórios
+
+### Cadastro de usuário e assinatura
+
+O cadastro recebe todos os campos exigidos pelo RF1. A senha é salva como hash BCrypt. O número
+completo do cartão e o código de segurança são recebidos apenas para tokenização local de
+demonstração: eles não são persistidos e não aparecem na resposta.
+
+```http
+POST /api/v1/usuarios
+Content-Type: application/json
+
 {
-  "id": 1,
-  "titulo": "Título do Filme",
-  "sinopse": "Sinopse do filme",
-  "dataLancamento": "2023-01-01",
-  "genero": "Ação",
-  "duracaoMinutos": 120,
-  "classificacaoIndicativa": "12 anos"
+  "nomeCompleto": "Maria da Silva",
+  "dataNascimento": "1995-05-20",
+  "email": "maria@example.com",
+  "senha": "Senha@123",
+  "confirmarSenha": "Senha@123",
+  "cpfCnpj": "52998224725",
+  "numeroCartao": "4111111111111111",
+  "validadeCartao": "12/2030",
+  "codigoSegurancaCartao": "123",
+  "nomeTitularCartao": "Maria da Silva"
 }
 ```
 
-## 🧪 Testes
+### Login
 
-O projeto possui cobertura de testes abrangente:
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
 
-- **FilmeRepository**: 100% de cobertura
-- **FilmeService**: 80.9% de cobertura  
-- **FilmeController**: 83.2% de cobertura
-- **FilmeMapper**: 100% de cobertura
-
-### Executando os Testes
-
-```bash
-# Executar todos os testes
-mvn test
-
-# Executar testes com relatório de cobertura
-mvn test jacoco:report
-
-# Visualizar relatório de cobertura
-# Abra: target/site/jacoco/index.html
+{
+  "email": "maria@example.com",
+  "senha": "Senha@123"
+}
 ```
 
-## 🏗️ Arquitetura e Boas Práticas
+As rotas protegidas usam HTTP Basic com o mesmo e-mail e senha cadastrados.
 
-### Separação de Responsabilidades
-- **Controller**: Responsável por tratar requisições HTTP e validações
-- **Service**: Contém a lógica de negócio e regras do domínio
-- **Repository**: Interface para acesso e persistência de dados
-- **DTO**: Objeto de transferência de dados para API
-- **Mapper**: Conversão entre entidades e DTOs
-
-### Validação
-- Validação de dados na camada de controller usando Bean Validation
-- Título do filme é obrigatório (`@NotBlank`)
-
-### Tratamento de Exceções
-- Logs informativos para todas as operações
-- Tratamento adequado de recursos não encontrados
-- Retorno de status HTTP apropriados
-
-### Logging
-- Logs em diferentes níveis (INFO, DEBUG, WARN, ERROR)
-- Informações contextuais para facilitar debugging
-
-## 🚀 Como Executar
-
-### Pré-requisitos
-- Java 21 ou superior
-- Maven 3.6 ou superior
-
-### Execução
+### Alterar cartão após autenticação
 
 ```bash
-# Clonar o projeto
-git clone <repositório>
-
-# Entrar no diretório
-cd tecback
-
-# Compilar e executar
-mvn spring-boot:run
+curl -u maria@example.com:Senha@123 \
+  -X PUT http://localhost:8080/api/v1/metodos-pagamento/1 \
+  -H "Content-Type: application/json" \
+  -d "{\"numeroCartao\":\"5555555555554444\",\"validadeCartao\":\"12/2031\",\"codigoSegurancaCartao\":\"321\",\"nomeTitularCartao\":\"Maria da Silva\"}"
 ```
 
-A aplicação estará disponível em: `http://localhost:8080`
+### Catálogo detalhado
 
-### Documentação da API
+```http
+GET /api/v1/conteudos
+GET /api/v1/conteudos/{id}
+GET /api/v1/conteudos?tipo=FILME
+GET /api/v1/conteudos?tipo=SERIE
+```
 
-A documentação OpenAPI/Swagger está disponível em:
-`http://localhost:8080/swagger-ui.html`
+Cada conteúdo possui título, gênero, ano, duração, relevância, sinopse e URL do trailer.
 
-### Console H2
+### Favoritos separados por tipo
 
-O console do banco H2 está disponível em:
-`http://localhost:8080/h2`
+```http
+GET /api/v1/favoritos/usuario/{usuarioId}/filmes
+GET /api/v1/favoritos/usuario/{usuarioId}/series
+```
 
-**Configurações de conexão:**
-- URL: `jdbc:h2:file:~/teckback20262`
-- User Name: `sa`
-- Password: `password`
+### Cadastro administrativo de conteúdo
 
-## 📊 Métricas de Qualidade
-
-- **Cobertura de Testes**: >80% nas camadas principais
-- **Code Quality**: Segue padrões e convenções Java
-- **Arquitetura**: Limpa, com separação clara de responsabilidades
-- **Documentação**: API auto-documentada com OpenAPI
-
-## 🔧 Desenvolvimento
-
-### Comandos Úteis
+As operações de escrita do catálogo exigem o perfil `ADMIN`. Para demonstração em sala, existe o
+administrador local `admin` com senha `admin123`.
 
 ```bash
-# Compilar projeto
-mvn compile
-
-# Executar testes
-mvn test
-
-# Gerar relatório de cobertura
-mvn jacoco:report
-
-# Limpar projeto
-mvn clean
-
-# Empacar aplicação
-mvn package
-
-# Verificar dependências
-mvn dependency:tree
+curl -u admin:admin123 \
+  -X POST http://localhost:8080/api/v1/conteudos \
+  -H "Content-Type: application/json" \
+  -d "{\"titulo\":\"Interestelar\",\"tipo\":\"FILME\",\"ano\":2014,\"duracaoMinutos\":169,\"relevancia\":9.5,\"sinopse\":\"Ficção científica\",\"trailerUrl\":\"https://example.com/trailer\",\"genero\":\"Ficção Científica\"}"
 ```
 
-### Configuração de Desenvolvimento
+## Serviço Externo
 
-O projeto utiliza perfil de teste (`application-test.properties`) com:
-- Banco H2 em memória
-- Logs em nível DEBUG
-- Criação automática de schema
+A integração com o ViaCEP usa OpenFeign. Um exemplo pode ser executado por `POST /funcionarios`
+enviando `nome`, `cargo` e `cep`; o serviço completa os dados de endereço retornados pela API.
 
-## 📝 Próximos Passos
+## Testes
 
-Sugestões para evolução do projeto:
+No Windows:
 
-1. **Autenticação e Autorização**: Implementar Spring Security
-2. **Validações Avançadas**: Adicionar validações de negócio mais complexas
-3. **Paginação**: Implementar paginação nas listagens
-4. **Filtros**: Adicionar filtros por gênero, data, etc.
-5. **Cache**: Implementar cache para consultas frequentes
-6. **Integração**: Conectar com banco de dados production-ready
-7. **Monitoramento**: Adicionar métricas e health checks
+```powershell
+.\mvnw.cmd test
+```
 
-## 👨‍💻 Autor
+No Linux ou macOS:
 
-Desenvolvido como parte da disciplina de Backend 1 da Uniesp, demonstrando conceitos de desenvolvimento Java Enterprise com Spring Boot.
+```bash
+./mvnw test
+```
+
+O relatório JaCoCo é gerado em `target/site/jacoco/index.html`.
